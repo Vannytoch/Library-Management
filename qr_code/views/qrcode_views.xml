@@ -1,0 +1,73 @@
+<odoo>
+  <data>
+
+    <!-- explicit list view definition -->
+    <record id="account_qrcode_list_view" model="ir.ui.view">
+      <field name="name">account.qrcode.list.view</field>
+      <field name="model">account.qrcode</field>
+      <field name="arch" type="xml">
+        <list>
+          <field name="id" optional="hide"/>
+          <field name="name" decoration-info="1"/>
+        </list>
+      </field>
+    </record>
+
+    <record id="account_qrcode_form_view" model="ir.ui.view">
+    <field name="name">account.qrcode.form</field>
+    <field name="model">account.qrcode</field>
+    <field name="arch" type="xml">
+      <form string="QR Code Form">
+
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="image" widget="image"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+
+    <record id="account_qrcode_kanban_view" model="ir.ui.view">
+      <field name="name">account.qrcode.kanban.view</field>
+      <field name="model">account.qrcode</field>
+      <field name="arch" type="xml">
+        <kanban class="o_kanban_mobile">
+          <templates>
+            <t t-name="card">
+              <div class="row">
+                <div class="col-4">
+                  <aside class="o_kanban_aside_full">
+                    <div class="o_kanban_image_fill position-relative w-100 m-1">
+                      <field name="image" class="h-100" widget="image" option="{'img_class':'object-fit-cover'}"/>
+                    </div>
+                  </aside>
+                </div>
+                <div class="col-4">
+                  <field name="name" class="fw-bolder"/>
+                </div>
+              </div>
+              <div>
+                <strong>
+                  Create date:
+                </strong>
+                <field name="create_date"/>
+              </div>
+            </t>
+          </templates>
+        </kanban>
+      </field>
+    </record>
+
+    <record id="account_qrcode_action" model="ir.actions.act_window">
+      <field name="name">QR Code</field>
+      <field name="res_model">account.qrcode</field>
+      <field name="view_mode">kanban,form</field>
+    </record>
+
+    <menuitem id="account_qrcode_menu" name="QR Code Records" parent="account.menu_finance" action="account_qrcode_action"/>
+
+  </data>
+</odoo>
