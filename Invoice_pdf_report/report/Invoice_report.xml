@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Layout without header and footer -->
+    <template id="invoice_layout">
+<!--        <t t-if="not o" t-set="o" t-value="doc"/>-->
+<!--        <t t-if="not company">-->
+<!--            <t t-if="company_id">-->
+<!--                <t t-set="company" t-value="company_id"/>-->
+<!--            </t>-->
+<!--            <t t-elif="0 and 'company_id' in o and o.company_id.sudo()">-->
+<!--                <t t-set="company" t-value="o.company_id.sudo()"/>-->
+<!--            </t>-->
+<!--            <t t-else="else">-->
+<!--                <t t-set="company" t-value="res_company"/>-->
+<!--            </t>-->
+<!--        </t>-->
+
+        <div class="article" style="height: 1400px; max-height: 1754px; background-color: #FAF9F4 !important; padding: 80px;">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <!-- Main invoice content -->
+    <template id="invoice_report_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="Invoice_pdf_report.invoice_layout">
+
+                    <!-- Styles -->
+                    <style>
+                        html, body {
+                            background-color: #FAF9F4 !important;
+                        }
+                        .page {
+                            background-color: transparent !important;
+                        }
+                        .fake-table {
+                            display: table;
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        .fake-header, .fake-row {
+                            display: table-row;
+                        }
+                        .fake-cell {
+                            display: table-cell;
+                            padding: 8px;
+                            text-align: left;
+                            vertical-align: middle;
+                        }
+                        .text-center {
+                            text-align: center !important;
+                        }
+                        .fake-header .fake-cell {
+                            font-weight: bold;
+                            border-bottom: 1px solid #FE542E;
+                        }
+                        .fake-row {
+                            border-bottom: 1px solid #FE542E;
+                        }
+                        .no-border-wrapper {
+                            padding: 0;
+                            margin: 0;
+                        }
+                    </style>
+
+                    <div class="page" style="font-family: 'Calibri'; font-size: 18px; color: #21335B;">
+                        <!-- Invoice header -->
+                        <div class="row mb-5">
+                            <div class="col-6">
+                                <img alt="Image is not loading..." src="/Invoice_pdf_report/static/Crown.PNG" style="height: 150px;" />
+                            </div>
+                            <div class="col-6 text-end" style="font-family: 'Maiandra GD';">
+                                <br/>
+                                <h1 class="fw-bold" style="font-size: 50px;">Invoice</h1>
+<!--                                <span t-set="o" t-value="model"/>-->
+                                <p class="h3 fw-bold"><span t-esc="doc.name"/></p>
+                            </div>
+                        </div>
+
+                        <!-- Customer info -->
+                        <div class="row">
+                            <div class="col-6">
+                                <p class="fw-bold" style="line-height: 1;">Billed to:</p>
+                                <p style="margin: 0; line-height: 1.6;">
+                                    <span t-field="doc.partner_id.name"/><br/>
+                                    <span t-field="doc.partner_id.phone"/><br/>
+                                    <span t-field="doc.partner_id.street"/><br/>
+                                    <span t-field="doc.partner_id.city"/>
+                                </p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p style="line-height: 1;"><span class="fw-bold">Invoice Date</span>: <span t-field="doc.invoice_date"/></p>
+                                <p style="line-height: 1;"><span class="fw-bold">Due Date</span>: <span t-field="doc.invoice_date_due"/></p>
+                            </div>
+                        </div>
+
+                        <!-- Items table -->
+                        <div class="no-border-wrapper mt-4">
+                            <div class="fake-table">
+                                <div class="fake-header">
+                                    <div class="fake-cell">Item</div>
+                                    <div class="fake-cell text-center">Quantity</div>
+                                    <div class="fake-cell text-center">Unit Price</div>
+                                    <div class="fake-cell text-center">Discount (%)</div>
+                                    <div class="fake-cell text-end">Total</div>
+                                </div>
+                                <t t-set="total_discount" t-value="0.0"/>
+                                <t t-foreach="doc.invoice_line_ids" t-as="line">
+                                    <div class="fake-row">
+                                        <div class="fake-cell"><span t-field="line.product_id.name"/></div>
+                                        <div class="fake-cell text-center"><span t-field="line.quantity"/></div>
+                                        <div class="fake-cell text-center"><span t-field="line.price_unit"/></div>
+                                        <div class="fake-cell text-center"><span t-field="line.discount"/>%</div>
+                                        <div class="fake-cell text-end"><span t-field="line.price_subtotal"/></div>
+                                        <t t-set="total_discount" t-value="total_discount + (line.price_unit * line.quantity * (line.discount / 100.0))"/>
+                                    </div>
+                                </t>
+                                <div class="fake-row" style="border-bottom: none; height: 20px;">
+                                    <div class="fake-cell"> </div>
+                                    <div class="fake-cell text-center"> </div>
+                                    <div class="fake-cell text-center"> </div>
+                                    <div class="fake-cell text-center"><b>Subtotal<br/>Discount<br/>VAT</b></div>
+                                    <div class="fake-cell text-end"><span t-field="doc.amount_untaxed"/><br/>$ <t t-out="total_discount"/><br/><span t-field="doc.amount_tax"/></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grand Total -->
+                        <div class="row pt-3">
+                            <div class="col-5"> </div>
+                            <div class="col-7" style="background-color: #FE542E; margin-left: 130px;">
+                                <div class="fake-table" style="padding-top: 5px">
+                                    <div class="fake-row fw-bold pt-2" style="font-family: 'Maiandra GD';">
+                                        <div class="fake-cell" style="color: white;">
+                                            <h4 style="padding-left:50px;" >Total</h4>
+                                        </div>
+                                        <div class="fake-cell text-end" style="color: white;">
+                                            <h4><span t-field="doc.amount_total"/></h4>
+                                        </div>
+                                         <div class="fake-cell " style="width: 130px;">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Information -->
+                        <h4 class="pt-4">Payment Information</h4>
+                        <div class="row pt-2">
+                            <div class="col-2">
+                                <img t-if="doc.get_data_invoice()['qrcode_record']" t-att-src="image_data_uri(doc.get_data_invoice()['qrcode_record'])" class="w-100" alt="QR Code"/>
+                            </div>
+                            <div class="col-8 ps-3 d-flex align-items-center">
+                                <h5 class="my-auto">
+                                    <span class="fw-bold">ADVANCED BANK OF ASIA LIMITED (ABA BANK)</span><br/>
+                                    <span class="fw-bold">Account Name: <span t-field="doc.invoice_user_id"/></span> <br/>
+                                    <span class="fw-bold">Account No.: <span t-field="doc.partner_bank_id"/></span>
+                                </h5>
+                            </div>
+                        </div>
+
+                        <!-- Thank You Section -->
+                        <div class="row pt-3">
+                            <div class="col-6">
+
+                            </div>
+                            <div class="col-6 text-center">
+                                <img alt="Party Logo" class="w-100" src="/Invoice_pdf_report/static/party.PNG"/>
+                                <h3 class="mx-auto" style="font-family: 'Maiandra GD';">Thank you for supporting us!</h3>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report Action -->
+    <record id="account_invoice_custom_report" model="ir.actions.report">
+        <field name="name">Account Invoice Report</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">Invoice_pdf_report.invoice_report_template</field>
+        <field name="report_file">Invoice_pdf_report.invoice_report_template</field>
+        <field name="print_report_name">'Invoice-%s' % (object.name)</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>
