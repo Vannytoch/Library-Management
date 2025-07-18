@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "qrcode",
+    'name': "student",
 
     'summary': "Short (1 phrase/line) summary of the module's purpose",
 
@@ -18,15 +18,24 @@ Long description of module's purpose
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['account'],
+    'depends': ['base', 'account'],
 
     # always loaded
     'data': [
-        'security/security.xml',
+        'data/res_partner_data.xml',
+        'data/res.partner.title.csv',
         'security/ir.model.access.csv',
-        'views/qrcode_views.xml',
-        'views/account_move_qrcode_view.xml',
+        'data/res.partner.csv',
+        'views/student_views.xml',
+        'views/school_views.xml',
+        'views/hobby_views.xml',
         # 'views/templates.xml',
     ],
+    # # only loaded in demonstration mode
+    # 'demo': [
+    #     'demo/demo.xml',
+    # ],
+    'insallable':True,
+    'application': True,
 }
 

@@ -1,0 +1,162 @@
+<odoo>
+  <data>
+      <record id="school_status_list_view" model="ir.ui.view">
+          <field name="name">school.status.list.view</field>
+          <field name="model">school.status</field>
+          <field name="arch" type="xml">
+            <list editable="top">
+                <field name="sequence" widget="handle" />
+                <field name="id"/>
+              <field name="name"/>
+            </list>
+          </field>
+      </record>
+
+       <record id="school_status_action" model="ir.actions.act_window">
+        <field name="name">Status</field>
+        <field name="res_model">school.status</field>
+        <field name="view_mode">list</field>
+      </record>
+
+       <menuitem id="school_status_menu" name="Status Records" parent="student_student_root_menu" action="school_status_action"/>
+
+
+
+
+    <!-- explicit list view definition -->
+    <record id="student_school_list_view" model="ir.ui.view">
+      <field name="name">student.school.list.view</field>
+      <field name="model">student.school</field>
+      <field name="arch" type="xml">
+        <list>
+  <field name="name"/>
+          <field name="ref_field_id"/>
+          <field name="amount"/>
+          <field name="my_currency_id"/>
+            <field name="status_id"/>
+<!--          <field name="student_ids"/>-->
+        </list>
+      </field>
+    </record>
+
+  <record id="student_school_form_view" model="ir.ui.view">
+    <field name="name">student.school.form</field>
+    <field name="model">student.school</field>
+    <field name="arch" type="xml">
+      <form string="School Form">
+        <header>
+            <button name="custom_method" string="Custom method" type="object" class="btn-warning"/>
+            <button name="duplicate_records" string="Duplicate Records" type="object" class="btn-danger"/>
+            <field name="status_id" widget="statusbar" options="{'clickable':1}"/>
+        </header>
+
+
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button name="custom_method" type="object" string="Custom Method" icon="fa-bars">
+              <span class="o_stat_info">
+                <span class="o_stat_value">
+                  <field name="amount"/>
+                </span>
+                <span class="o_stat_text">
+                School fees
+                </span>
+              </span>
+            </button>
+
+            <button name="custom_method" type="object" string="Custom Method" icon="fa-bar-chart">
+              <span class="o_stat_info">
+                <span class="o_stat_value">
+<!--                  <field name="amount"/>-->
+                  $200
+                </span>
+                <span class="o_stat_text">
+                Taxes
+                </span>
+              </span>
+            </button>
+
+            <button name="custom_method" type="object" string="Custom Method" icon="fa-users">
+              <span class="o_stat_info">
+                <span class="o_stat_value">
+<!--                  <field name="amount"/>-->
+                  20
+                </span>
+                <span class="o_stat_text">
+                No students
+                </span>
+              </span>
+            </button>
+
+            <button name="custom_method" type="object" string="Custom Method" icon="fa-book">
+              <span class="o_stat_info">
+                <span class="o_stat_value">
+<!--                  <field name="amount"/>-->
+                  50
+                </span>
+                <span class="o_stat_text">
+                No of faculty
+                </span>
+              </span>
+            </button>
+
+            <button name="custom_method" type="object" string="Custom Method" icon="fa-star">
+              <span class="o_stat_info">
+                <span class="o_stat_value">
+<!--                  <field name="amount"/>-->
+                  0
+                </span>
+                <span class="o_stat_text">
+                Ended Study
+                </span>
+              </span>
+            </button>
+            <button name="custom_method" type="object" string="Custom Method" icon="fa-home">
+              <span class="o_stat_info">
+                <span class="o_stat_value">
+<!--                  <field name="amount"/>-->
+                  0
+                </span>
+                <span class="o_stat_text">
+                Ended Study
+                </span>
+              </span>
+            </button>
+          </div>
+          <group>
+            <group>
+              <field name="name"/>
+              <field name="ref_field_id"/>
+              <field name="amount"/>
+              <field name="my_currency_id"/>
+              <field name="invoice_id"/>
+              <field name="invoice_user_id"/>
+              <field name="invoice_date"/>
+              <field name="binary_fields" string="Upload File" widget="many2many_binary"/>
+              <field name="binary_field" string="Upload File" filename="binary_file_name"/>
+              <field name="binary_file_name"  invisible="1"/>
+
+  <!--            <field name="student_ids"/>-->
+            </group>
+             <group>
+              <field name="school_image" widget="image" class="oe_avatar" nolabel="1"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+
+   <record id="student_school_action" model="ir.actions.act_window">
+    <field name="name">Schools</field>
+    <field name="res_model">student.school</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+<!--  <menuitem id="student_school_root_menu" name="Students" sequence="10"/>-->
+  <menuitem id="student_school_menu" name="School Records" parent="student_student_root_menu" action="student_school_action"/>
+
+
+  </data>
+</odoo>

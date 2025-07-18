@@ -12,6 +12,7 @@
                 <xpath expr="//button[@name='action_print_pdf']" position="attributes">
                     <attribute name="string">Print Invoice</attribute>
                     <attribute name="name">action_print_invoice</attribute>
+                    <attribute name="groups">qr_code.group_can_print_invoice</attribute>
                 </xpath>
 <!--                <xpath expr="//sheet" position="inside">-->
 <!--                    <group string="QR Code">-->

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "qrcode",
+    'name': "Qweb Report Demo",
 
     'summary': "Short (1 phrase/line) summary of the module's purpose",
 
@@ -18,15 +18,16 @@ Long description of module's purpose
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['account'],
+    'depends': ['student'],
 
     # always loaded
     'data': [
-        'security/security.xml',
-        'security/ir.model.access.csv',
-        'views/qrcode_views.xml',
-        'views/account_move_qrcode_view.xml',
+
+        'report/student_report.xml',
+        # 'views/hobby_views.xml',
         # 'views/templates.xml',
     ],
+
+
 }
 

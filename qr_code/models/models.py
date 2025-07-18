@@ -3,9 +3,11 @@ import os.path
 from email.policy import default
 
 from odoo import models, fields, api
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import ValidationError, UserError, AccessError
 import time
 import re
+
+
 
 class Qrcode(models.Model):
     _name="account.qrcode"
@@ -19,6 +21,8 @@ class AccountMoveInherit(models.Model):
 
     def action_print_invoice(self):
         self.ensure_one()
+        if not self.env.user.has_group('qr_code.group_can_print_invoice'):
+            raise AccessError("You do not have permission to print invoices.")
         return self.env.ref('Invoice_pdf_report.account_invoice_custom_report').report_action(self)
 
     #
