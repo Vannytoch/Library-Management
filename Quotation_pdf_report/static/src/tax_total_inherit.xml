@@ -3,7 +3,7 @@
 
     <t t-inherit="account.TaxTotalsField" t-inherit-mode="extension" owl="1">
         <xpath expr="//tr[1]" position="before">
-       <!-- Discount amount with all taxes -->
+       <!-- Total amount without all taxes -->
             <tr>
                 <td class="o_td_label">
                     <label class="o_form_label o_tax_total_label">Subtotal</label>
@@ -17,6 +17,7 @@
                     />
                 </td>
             </tr>
+       <!-- Discount amount -->
             <tr>
                 <td class="o_td_label">
                     <label class="o_form_label o_tax_total_label">Total Discount</label>

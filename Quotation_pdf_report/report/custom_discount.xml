@@ -41,15 +41,6 @@
                 </field>
             </record>
 
-<!--&lt;!&ndash;        in line item form view&ndash;&gt;-->
-<!--        <record id="view_form_sale_order_line_inherit" model="ir.ui.view">-->
-<!--            <field name="name">sale.order.line.form.custom.discount</field>-->
-<!--            <field name="model">sale.order.line</field>-->
-<!--            <field name="inherit_id" ref="sale."-->
-<!--        </record>-->
-
-
-
 <!--        create wizard-->
         <record id="view_sale_order_discount_form" model="ir.ui.view">
             <field name="name">sale.discount.custom.wizard.form</field>
