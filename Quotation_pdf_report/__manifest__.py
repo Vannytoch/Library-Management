@@ -22,8 +22,15 @@ Long description of module's purpose
 
     # always loaded
     'data': [
-
         'report/quotation_report.xml',
+        'report/custom_discount.xml',
+        'security/ir.model.access.csv',
     ],
+    'assets': {
+            'web.assets_backend': [
+                'Quotation_pdf_report/static/src/**/*',
+            ],
+    }
+
 }
 

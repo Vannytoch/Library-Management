@@ -58,15 +58,23 @@
 
                             <!-- Line Items -->
                             <t t-set="total_discount" t-value="0.0"/>
+                            <t t-set="total" t-value="0.0"/>
                             <t t-foreach="doc.order_line" t-as="line">
                                 <div class="row py-3 " style="border-bottom: 1px solid #FE542E;">
                                     <div class="col-4 ps-1"><span t-field="line.product_id.name"/></div>
                                     <div class="col-2 text-center"><span t-field="line.product_uom_qty"/></div>
                                     <div class="col-2 text-center"><span t-field="line.price_unit"/></div>
-                                    <div class="col-2 text-center"><span t-field="line.discount"/>%</div>
+                                    <t t-if="discount_choose == 'Original'">
+                                        <div class="col-2 text-center"><span t-field="line.discount"/>%</div>
+                                    </t>
+                                    <t t-else="else">
+                                        <div class="col-2 text-center"><span t-field="line.custom_discount"/>%</div>
+                                    </t>
                                     <div class="col-2 text-end pe-2"><span t-field="line.price_subtotal"/></div>
                                 </div>
+
                                 <t t-set="total_discount" t-value="total_discount + (line.price_unit * line.product_uom_qty * (line.discount / 100.0))"/>
+                                <t t-set="total" t-value="total + (line.price_unit * line.product_uom_qty)"/>
                             </t>
 
                             <!-- Totals -->
@@ -111,8 +119,8 @@
                                         <div class="col-3 text-end pe-1" style="line-height: 1.5">
                                             <p style="line-height: 2.0;">
 
-                                            <span t-field="doc.amount_untaxed"/><br/>
-                                            $ <t t-out="total_discount"/><br/>
+                                            $ <t t-out="total" t-options='{"widget": "float", "precision": 2}'/><br/>
+                                            $ <span t-field="doc.discount_amount"/><br/>
                                             <span t-field="doc.amount_tax"/>
                                             </p>
                                         </div>

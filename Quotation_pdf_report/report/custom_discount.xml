@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+<!--        inherit to Quotation-->
+<!--        button at header-->
+        <record id="view_sale_order_discount_form_inherit" model="ir.ui.view">
+            <field name="name">sale.order.form.discount.inherit</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="button_discount_custom"
+                            string="Custom Discount"
+                            type="object"
+                            invisible="discount_choose == 'Original'"
+                            class="btn btn-primary"
+                    />
+                </xpath>
+
+            </field>
+        </record>
+
+<!--        in line item list view-->
+            <record id="view_order_line_tree_inherit" model="ir.ui.view">
+                <field name="name">sale.order.line.list.custom.discount</field>
+                <field name="model">sale.order</field>
+                <field name="inherit_id" ref="sale.view_order_form"/>
+                <field name="arch" type="xml">
+                    <xpath expr="//field[@name='payment_term_id']" position="after">
+                        <field name="discount_choose"/>
+                    </xpath>
+                    <xpath expr="//field[@name='order_line']/list/field[@name='price_unit']" position="after">
+                        <field name="custom_discount" optional="show" column_invisible="parent.discount_choose == 'Original'"/>
+                    </xpath>
+                    <xpath expr="//field[@name='order_line']/list/field[@name='discount']" position="attributes">
+                        <attribute name="column_invisible">parent.discount_choose == 'Custom'</attribute>
+                    </xpath>
+                    <xpath expr="//button[@name='action_open_discount_wizard']" position="attributes">
+                        <attribute name="invisible">discount_choose == 'Custom'</attribute>
+                    </xpath>
+                </field>
+            </record>
+
+<!--&lt;!&ndash;        in line item form view&ndash;&gt;-->
+<!--        <record id="view_form_sale_order_line_inherit" model="ir.ui.view">-->
+<!--            <field name="name">sale.order.line.form.custom.discount</field>-->
+<!--            <field name="model">sale.order.line</field>-->
+<!--            <field name="inherit_id" ref="sale."-->
+<!--        </record>-->
+
+
+
+<!--        create wizard-->
+        <record id="view_sale_order_discount_form" model="ir.ui.view">
+            <field name="name">sale.discount.custom.wizard.form</field>
+            <field name="model">sale.discount.custom</field>
+            <field name="arch" type="xml">
+                <form string="Apply custom discount">
+                    <group>
+<!--                        <field name="sale_order_id"/>-->
+                        <field name="custom_discount" string="Discount Amount: "/>
+                         <field name="check_all"/>
+                        <field name="line_ids" widget="many2many_checkboxes" domain="[('order_id', '=', order_id),('display_type','not in', ['line_section', 'line_note'])]"/>
+                    </group>
+                    <footer>
+                        <button name="apply_discount" type="object" class="btn-primary" string="Apply"/>
+                        <button string="cancel" class="btn-danger" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+<!--action for wizard-->
+        <record id="action_open_sale_order_discount_wizard" model="ir.actions.act_window">
+            <field name="name">Appy custom discount</field>
+            <field name="res_model">sale.discount.custom</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_sale_order_discount_form"/>
+            <field name="target">new</field>
+        </record>
+    </data>
+</odoo>
