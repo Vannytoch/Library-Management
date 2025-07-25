@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+    <t t-name="Quotation_pdf_report.TaxTotalsField" t-inherit="account.TaxTotalsField" t-inherit-mode="extension">
+
+<!--        <xpath expr="/" position="inside">-->
+            <h1>Hello</h1>
+<!--        </xpath>-->
+<!--        <t t-if="totals">-->
+<!--              &lt;!&ndash; 👇 Subtotal (before discount) &ndash;&gt;-->
+<!--            <tr>-->
+<!--                <td class="o_td_label">-->
+<!--                    <label class="o_form_label o_tax_total_label">Subtotal</label>-->
+<!--                </td>-->
+<!--                <td class="o_list_monetary">-->
+<!--                    <span-->
+<!--                        name="total_before_discount"-->
+<!--                        t-out="formatMonetary(totals.total_before_discount)"-->
+<!--                        style="font-size: 1.2em; font-weight: bold; white-space: nowrap;"-->
+<!--                    />-->
+<!--                </td>-->
+<!--            </tr>-->
+
+<!--            &lt;!&ndash; 👇 Discount Row &ndash;&gt;-->
+<!--            <tr>-->
+<!--                <td class="o_td_label">-->
+<!--                    <label class="o_form_label o_tax_total_label">Total Discount</label>-->
+<!--                </td>-->
+<!--                <td class="o_list_monetary">-->
+<!--                    <span-->
+<!--                        name="discount_amount"-->
+<!--                        t-out="formatMonetary(totals.discount_total)"-->
+<!--                        style="font-weight: bold; white-space: nowrap; color: red;"-->
+<!--                    />-->
+<!--                </td>-->
+<!--            </tr>-->
+<!--        </t>-->
+<!--        </xpath>-->
+    </t>
+
+</templates>
