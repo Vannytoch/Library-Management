@@ -43,37 +43,6 @@ class QuotationDiscountInherit(models.Model):
     )
     discount_amount = fields.Float(string="Discount Amount:")
 
-    def _add_base_lines_for_early_payment_discount_custom(self):
-        self.ensure_one()
-        epd_lines = []
-        if (
-            self.payment_term_id.early_discount
-            and self.payment_term_id.early_pay_discount_computation == 'mixed'
-            and self.payment_term_id.discount_percentage
-        ):
-            percentage = self.payment_term_id.discount_percentage
-            currency = self.currency_id or self.company_id.currency_id
-            for line in self.order_line.filtered(lambda x: not x.display_type):
-                line_amount_after_discount = (line.price_subtotal / 100) * percentage
-                epd_lines.append(self.env['account.tax']._prepare_base_line_for_taxes_computation_custom(
-                    record=self,
-                    price_unit=-line_amount_after_discount,
-                    quantity=1.0,
-                    currency_id=currency,
-                    sign=1,
-                    special_type='early_payment',
-                    tax_ids=line.tax_id,
-                ))
-                epd_lines.append(self.env['account.tax']._prepare_base_line_for_taxes_computation_custom(
-                    record=self,
-                    price_unit=line_amount_after_discount,
-                    quantity=1.0,
-                    currency_id=currency,
-                    sign=1,
-                    special_type='early_payment',
-                ))
-        return epd_lines
-
     @api.depends_context('lang')
     @api.depends('order_line.price_subtotal','order_line.price_unit', 'order_line.custom_discount', 'order_line.discount','discount_choose', 'currency_id', 'company_id', 'payment_term_id')
     def _compute_tax_totals(self):
@@ -82,11 +51,9 @@ class QuotationDiscountInherit(models.Model):
             order_lines = order.order_line.filtered(lambda x: not x.display_type)
             if(order.discount_choose=="Original"):
                 base_lines = [line._prepare_base_line_for_taxes_computation() for line in order_lines]
-                base_lines += order._add_base_lines_for_early_payment_discount()
             else:
                 base_lines = [line._prepare_base_line_for_taxes_computation_custom() for line in order_lines]
-                base_lines += order._add_base_lines_for_early_payment_discount_custom()
-
+            base_lines += order._add_base_lines_for_early_payment_discount()
             AccountTax._add_tax_details_in_base_lines(base_lines, order.company_id)
             AccountTax._round_base_lines_tax_details(base_lines, order.company_id)
             order.tax_totals = AccountTax._get_tax_totals_summary(
@@ -102,10 +69,9 @@ class QuotationDiscountInherit(models.Model):
             order_lines = order.order_line.filtered(lambda x: not x.display_type)
             if (order.discount_choose == "Original"):
                 base_lines = [line._prepare_base_line_for_taxes_computation() for line in order_lines]
-                base_lines += order._add_base_lines_for_early_payment_discount()
             else:
                 base_lines = [line._prepare_base_line_for_taxes_computation_custom() for line in order_lines]
-                base_lines += order._add_base_lines_for_early_payment_discount_custom()
+            base_lines += order._add_base_lines_for_early_payment_discount()
             AccountTax._add_tax_details_in_base_lines(base_lines, order.company_id)
             AccountTax._round_base_lines_tax_details(base_lines, order.company_id)
             tax_totals = AccountTax._get_tax_totals_summary(
@@ -120,7 +86,6 @@ class QuotationDiscountInherit(models.Model):
 
     @api.depends('order_line.custom_discount')
     def _onchange_custom_discount(self):
-
         self._compute_tax_totals()
 
     @api.onchange('discount_choose')
@@ -130,14 +95,7 @@ class QuotationDiscountInherit(models.Model):
 
     def action_open_discount_wizard(self):
         self.discount_choose = 'Original'
-        self.ensure_one()
-        return {
-            'name': _("Discount"),
-            'type': 'ir.actions.act_window',
-            'res_model': 'sale.order.discount',
-            'view_mode': 'form',
-            'target': 'new',
-        }
+        return super().action_open_discount_wizard()
 
     def button_discount_custom(self):
         self.discount_choose = 'Custom'
