@@ -1,7 +1,0 @@
-<odoo>
-    <record id="group_can_print_invoice" model="res.groups">
-        <field name="name">Can Print Invoice</field>
-<!--        <field name="users" eval="[(4, ref('base.user_admin'))]"/>-->
-        <field name="category_id" ref="base.module_category_accounting"/>
-    </record>
-</odoo>
