@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <data>
+
+
         <record id="library_book_search_view" model="ir.ui.view">
             <field name="name">library.book.search.view</field>
             <field name="model">library.book</field>
@@ -23,16 +25,17 @@
             </field>
         </record>
 
-
         <record id="library_book_list_view" model="ir.ui.view">
             <field name="name">library.book.list.view</field>
             <field name="model">library.book</field>
             <field name="arch" type="xml">
-                <list string="Books List">
-                    <field name="title"/>
-                    <field name="author"/>
-                    <field name="isbn"/>
+                <list>
+                    <field name="title" decoration-danger="1"/>
+                    <field name="author_id" decoration-success="1"/>
+                    <field name="isbn" decoration-warning="1"/>
+                    <field name="genre"/>
                     <field name="publication_date"/>
+                    <field name="book_age"/>
                 </list>
             </field>
         </record>
@@ -46,34 +49,90 @@
                         <group class="row">
                             <group class="col-6">
                                 <field name="title"/>
-                                <field name="author"/>
+                                <field name="author_id"/>
+                                <field name="genre"/>
+                                <field name="isbn" placeholder="XXX-X-XX-XXXXXX-X"/>
                             </group>
                             <group class="-col-6">
-                                <field name="isbn" placeholder="XXX-X-XX-XXXXXX-X"/>
-                                <field name="publication_date"/>
+                                <field name="image_1920" widget="image" class="oe_avatar" nolabel="1"/>
                             </group>
+                            <notebook>
+                                <page string="Book Details">
+                                    <group>
+                                        <field name="publication_date"/>
+                                        <field name="book_age"/>
+                                    </group>
+                                </page>
+
+                                <page string="Status">
+                                    <group>
+                                        <field name="status"/>
+                                    </group>
+                                </page>
+                            </notebook>
                         </group>
                     </sheet>
                 </form>
             </field>
         </record>
 
+        <record id="library_book_kanban_view" model="ir.ui.view">
+            <field name="name">library.book.kanban.view</field>
+            <field name="model">library.book</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_model" default_group_by="status">
+                    <progressbar field="status"
+
+                       colors='{"available":"success", "borrowed":"warning", "lost":"danger"}'
+          />
+                    <templates>
+                        <t t-name="card">
+                            <div class="row">
+                                <div class="col-8">
+                                    <field class="fw-bolder" name="title"/>
+                                </div>
+                                <div class="col-4 text-end" >
+                                     <div class="o_kanban_image_fill position-relative w-100">
+                                          <field class="h-100" name="image_1920" widget="image" options="{'img_class': 'object-fit-cover'}"/>
+                                     </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <field name="author_id"/>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div t-attf-class="col-6 #{record.status.raw_value == 'available' and 'text-success' or ''}
+                                    #{record.status.raw_value == 'borrowed' and 'text-warning' or ''}
+                                    #{record.status.raw_value == 'lost' and 'text-danger' or ''}">
+                                    <field name="status"/>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <field name="isbn"/>
+                                </div>
+                            </div>
+
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
         <record id="library_book_action" model="ir.actions.act_window">
             <field name="name">Library Management</field>
             <field name="res_model">library.book</field>
-            <field name="view_mode">list,form</field>
+            <field name="view_mode">kanban,list,form</field>
 
         </record>
 
-        <menuitem id="library_book_root_menu" name="Library" sequence="1"/>
-
+        <menuitem id="library_book_root_menu" name="Library Management" sequence="1"/>
         <menuitem id="library_book_sub_menu"
                   name="Books List"
                   parent="library_book_root_menu"
                   action="library_book_action"
                   sequence="2"/>
-
-
 
     </data>
 </odoo>
