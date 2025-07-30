@@ -70,8 +70,14 @@
                                     </group>
                                 </page>
                             </notebook>
+                            <group>
+                                <field name="member_id" context="{'from_member_form': True}"/>
+                            </group>
                         </group>
                     </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>
@@ -124,7 +130,6 @@
             <field name="name">Library Management</field>
             <field name="res_model">library.book</field>
             <field name="view_mode">kanban,list,form</field>
-
         </record>
 
         <menuitem id="library_book_root_menu" name="Library Management" sequence="1"/>
