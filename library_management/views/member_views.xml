@@ -39,12 +39,19 @@
                                 <field name="image_1920" widget="image"/>
                                 <field name="contact"/>
                                 <field name="expiry_date"/>
-                                <field name="book_id" widget="many2many_tags" domain="[('id', 'in', available_book_ids)]" context="{'from_member_form': True}"/>
+                                <field name="book_id" string="Book renting" readonly="1" widget="many2many_tags"/>
+                            </group>
+                            <group class="text-end ">
+                                <group class="text-danger">
+                                    <field name="total_rental" readonly="1"/>
+                                </group>
+                                <group>
+
+                                </group>
                             </group>
                         </group>
                     </sheet>
                     <div class="oe_chatter">
-
                         <field name="message_ids" widget="mail_thread"/>
                     </div>
                 </form>

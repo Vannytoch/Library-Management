@@ -22,10 +22,13 @@ Long description of module's purpose
 
     # always loaded
     'data': [
+        'data/cron.xml',
+        'data/mail_template.xml',
         'security/ir.model.access.csv',
         'views/book_views.xml',
         'views/author_views.xml',
         'views/member_views.xml',
+        'views/rental_views.xml',
         'reports/book_report.xml',
     ],
 

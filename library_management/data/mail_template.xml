@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<!-- Correct structure -->
+<odoo>
+    <data noupdate="1">
+        <record id="email_template_rental_overdue" model="mail.template">
+            <field name="name">Overdue Rental Notification</field>
+            <field name="model_id" ref="library_management.model_library_rental"/>
+            <field name="subject">Overdue Book Rental: {{ object.book_ids.title }}</field>
+            <field name="email_from">{{ user.email or 'admin@example.com' }}</field>
+            <field name="email_to">{{ object.member_id.email or 'member@example.com' }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <t t-set="doc" t-value="object"/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear
+                        <t t-if="doc.member_id.name">
+                            <t t-out="doc.member_id.name or ''">boy</t>,
+                        </t>
+                        <br /><br />
+                        This is a reminder that you have overdue book(s) in your rental.
+                        <br /><br />
+                        Please return them as soon as possible to avoid penalties.
+                        <br /><br />
+                        Thank you,<br/>
+                    </p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

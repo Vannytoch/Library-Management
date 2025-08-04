@@ -66,18 +66,27 @@
 
                                 <page string="Status">
                                     <group>
-                                        <field name="status"/>
+                                        <field name="status" />
+                                        <field name="member_id" readonly="1"/>
                                     </group>
                                 </page>
                             </notebook>
                             <group>
-                                <field name="member_id" context="{'from_member_form': True}"/>
+                                <group>
+                                    <field name="rental_fee" widget="monetary"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </group>
+                                <group class="text-end text-danger fw-bolder">
+                                    <field name="total_rental" readonly="1" widget="monetary"/>
+                                </group>
+
                             </group>
                         </group>
                     </sheet>
                     <div class="oe_chatter">
                         <field name="message_ids" widget="mail_thread"/>
                     </div>
+
                 </form>
             </field>
         </record>
@@ -110,10 +119,11 @@
 
                             </div>
                             <div class="row">
-                                <div t-attf-class="col-6 #{record.status.raw_value == 'available' and 'text-success' or ''}
-                                    #{record.status.raw_value == 'borrowed' and 'text-warning' or ''}
-                                    #{record.status.raw_value == 'lost' and 'text-danger' or ''}">
-                                    <field name="status"/>
+                                <div class="col-6">
+                                      <field name="status" widget="badge"
+                                             decoration-success="status == 'available'"
+                                             decoration-warning="status == 'borrowed'"
+                                             decoration-danger="status == 'lost'"/>
                                 </div>
                                 <div class="col-6 text-end">
                                     <field name="isbn"/>
