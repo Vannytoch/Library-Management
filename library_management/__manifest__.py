@@ -30,6 +30,9 @@ Long description of module's purpose
         'views/member_views.xml',
         'views/rental_views.xml',
         'reports/book_report.xml',
+        'reports/report_rental_wizard.xml',
+        'reports/rental_report.xml',
+        'reports/rental_report_templates.xml',
     ],
 
 }

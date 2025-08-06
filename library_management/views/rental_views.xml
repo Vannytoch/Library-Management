@@ -40,10 +40,17 @@
     </record>
 
     <record id="view_library_rental_tree" model="ir.ui.view">
-        <field name="name">library.rental.list</field>
+        <field name="name">library.rental.list.view</field>
         <field name="model">library.rental</field>
         <field name="arch" type="xml">
             <list string="Rentals" >
+                <header>
+                    <button name="action_create_report" type="object" string="Report" display="always"/>
+                    <button name="generate_and_send_report"
+        type="object"
+        string="Send Monthly Report"
+        class="btn-primary"/>
+                </header>
                 <field name="member_id"/>
                 <field name="book_ids"/>
                 <field name="rental_date"/>
@@ -56,6 +63,7 @@
                        decoration-warning="state == 'draft'"
                        decoration-danger="state == 'overdue'" width="100" widget="badge"/>
                 <field name="currency_id" column_invisible="1"/>
+                <field name="create_date" optional="hide"/>
             </list>
         </field>
     </record>
@@ -96,6 +104,7 @@
         <field name="model">library.rental.return.wizard</field>
         <field name="arch" type="xml">
             <form string="Return Rentals">
+
                 <group>
                     <field name="rental_ids" widget="many2many_tags"/>
                 </group>
