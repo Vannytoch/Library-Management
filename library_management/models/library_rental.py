@@ -8,10 +8,15 @@ from openpyxl.styles import Alignment
 class RentalSystem(models.Model):
     _name = 'library.rental'
     _description = 'Rental System of Library'
+    _rec_name = 'name'
+    _order = 'name desc'
     _inherit = ['mail.thread', 'mail.activity.mixin']  # Enables chatter + activity tracking
-    _order = 'rental_date desc'
 
-
+    name = fields.Char(
+        string='Number',
+        readonly=True,
+        copy=False
+    )
     member_id = fields.Many2one('library.member', string="Member", required=True, tracking=True)
     book_ids = fields.Many2many(
         'library.book',  # target model
@@ -101,10 +106,20 @@ class RentalSystem(models.Model):
                 if fields.Date.context_today(record) > record.due_date:
                     record.state = 'overdue'
 
+    @api.onchange('due_date', 'rental_date')
+    def check_due_date(self):
+        if self.rental_date and self.due_date:
+            if self.rental_date > self.due_date:
+                self.due_date = datetime.now() + timedelta(days=1)
+                raise UserError('Due date must be after the rental date!')
+
+
     @api.model
     def create(self, vals):
         print('\n\n\n\n',vals, '\n\n\n')
+        self.check_due_date()
         res = super().create(vals)
+        res.write({'name': f"R{res.id:06d}"})
 
         if 'book_ids' in vals and vals.get('member_id'):
             book_ids = []
@@ -127,7 +142,8 @@ class RentalSystem(models.Model):
 
     @api.model
     def write(self, vals):
-        # Keep track of added and removed book IDs
+
+            # Keep track of added and removed book IDs
         added_books = set()
         removed_books = set()
 
@@ -166,7 +182,6 @@ class RentalSystem(models.Model):
                 {'status': 'borrowed'})
         # Call super to write vals
         result = super().write(vals)
-
         # Handle state change to 'returned'
         if 'state' in vals and vals['state'] in ['returned', 'draft']:
             for rec in self:

@@ -18,6 +18,7 @@
                 <sheet>
                     <group>
                         <group>
+                            <field name="name" readonly="1"/>
                             <field name="member_id" readonly="state != 'draft'"/>
                             <field name="book_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('id', 'in', available_book_ids)]"/>
                             <field name="rental_fee" readonly="1" widget="monetary"/>
@@ -51,6 +52,7 @@
         string="Send Monthly Report"
         class="btn-primary"/>
                 </header>
+                <field name="name"/>
                 <field name="member_id"/>
                 <field name="book_ids"/>
                 <field name="rental_date"/>
@@ -77,8 +79,9 @@
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click">
-                            <strong><field name="member_id"/></strong><br/>
+                            <strong><field name="name"/></strong><br/>
                             Book: <field name="book_ids"/><br/>
+                            <span>Member: <field name="member_id"/></span><br/>
                             <span>Rental: <field name="rental_date"/></span><br/>
                             <span>Due: <field name="due_date"/></span><br/>
                             <span>Status: <field name="state"/></span>

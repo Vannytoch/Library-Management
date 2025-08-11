@@ -24,7 +24,8 @@ class LibraryManagement(models.Model):
         string="Currency",
         compute='_compute_currency',
         store=True,
-        readonly=True
+        readonly=True,
+        required=True
     )
 
 
@@ -64,7 +65,7 @@ class LibraryManagement(models.Model):
                             pass
             book.total_rental = total
 
-    @api.depends()
+    @api.depends('rental_fee')
     def _compute_currency(self):
         for record in self:
             record.currency_id = self.env.company.currency_id
@@ -99,6 +100,7 @@ class LibraryManagement(models.Model):
                         'message': "ISBN must contain exactly 13 digits.",
                     }
                 }
+
 
     @api.model
     def create(self, vals):
@@ -140,7 +142,7 @@ class LibraryManagement(models.Model):
                 elif vals['status'] == 'available' and record.status == 'lost':
                     rental = self.env['library.rental'].search([
                         ('book_ids', 'in', record.id),
-                        ('state', '!=', 'returned')
+                        ('state', 'not in', ['returned', 'draft'])
                     ])
                     if rental:
                         vals.pop('status')
@@ -149,19 +151,12 @@ class LibraryManagement(models.Model):
         for rec in self:
             if 'status' in vals and vals['status'] in ['borrowed', 'lost']:
                 rental = self.env['library.rental'].search([
-                    ('state', '!=', 'returned'),
+                    ('state', 'not in', ['returned', 'draft']),
                     ('book_ids', '=', rec.id)
                 ], limit=1)
                 vals['member_id'] = rental.member_id if rental else False
             else:
                 vals['member_id'] = False
 
-        # l-b some
-        # l-b some
-
-        # l-a some
-        # l-a some ok
-
-        # b-l
-        # a-l
-        return super(LibraryManagement, self).write(vals)
+        res = super().write(vals)
+        return res

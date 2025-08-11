@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_home_library"
+              name="Library Management"
+              customize_show="True"
+              inherit_id="portal.portal_my_home"
+              priority="45">
+        <!-- Enable vendor category block if not already enabled -->
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_vendor_category_enable" t-value="True"/>
+        </xpath>
+        <!-- Insert the library portal card into the vendor category -->
+
+        <div id="portal_vendor_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/library_management/static/img/library.svg'"/>
+                <t t-set="title">Library Management</t>
+                <t t-set="text">Follow your borrowed books and history</t>
+                <t t-set="url" t-value="'/my/library/rental'"/>
+                <t t-set="placeholder_count" t-value="'rfq_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_breadcrumbs" inherit_id="portal.portal_breadcrumbs">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'rental_list_view'" class="breadcrumb-item">
+                Book Rental
+            </li>
+        </xpath>
+    </template>
+
+    <template id="library_rental_list_view_portal">
+        <t t-call="portal.portal_layout">
+           <t t-call="portal.portal_table">
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Member</th>
+                        <th>Book(s)</th>
+                        <th>Rental</th>
+                        <th>Due</th>
+                        <th>Return</th>
+                        <th>Fee</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="rentals" t-as="rental">
+                        <tr>
+                            <td class="text-center">
+                                <a t-attf-href="/my/library/rental/#{rental.id}">
+                                    <t t-esc="rental.name"/>
+                                </a>
+                            </td>
+                            <td>
+                                <t t-esc="rental.member_id.name"/>
+                            </td>
+                            <td>
+                                <t t-esc="', '.join(rental.book_ids.mapped('title'))"/>
+                            </td>
+                            <td>
+                                <t t-esc="rental.rental_date"/>
+                            </td>
+                            <td>
+                                <t t-esc="rental.due_date"/>
+                            </td>
+                            <td>
+                                <t t-esc="rental.return_date or '-'"/>
+                            </td>
+                            <td>
+                                <t t-esc="rental.rental_fee"/>
+                                <t t-esc="rental.currency_id.symbol"/>
+                            </td>
+                            <td>
+                                <t t-esc="rental.state"/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </t>
+
+        </t>
+    </template>
+
+    <template id="library_rental_form_view_portal" inherit_id="portal.portal_sidebar">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <t t-if="page_name == 'rental_form_view'">
+                <div class="container mt-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h2 class="h4 mb-0">
+                                <i class="fa fa-book-open me-2"></i>
+                                Rental Reference: <span class="fw-light"><t t-esc="rental.name"/></span>
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <div class="info-section mb-4">
+                                        <h3 class="h5 text-muted mb-3 border-bottom pb-2">
+                                            <i class="fa fa-user me-2"></i>Member Information
+                                        </h3>
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="flex-grow-1">
+                                                <div class="text-muted small">Member Name</div>
+                                                <div class="fw-bold"><t t-esc="rental.member_id.name"/></div>
+                                            </div>
+                                            <div class="ms-3">
+                                                <span t-att-class="'badge bg-' + ('success' if rental.state == 'returned' else 'warning' if rental.state == 'draft' else 'secondary')">
+                                                    <t t-esc="rental.state"/>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-section mb-4">
+                                        <h3 class="h5 text-muted mb-3 border-bottom pb-2">
+                                            <i class="fa fa-calendar-alt me-2"></i>Dates
+                                        </h3>
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <div class="text-muted small">Rental Date</div>
+                                                <div class="fw-bold"><t t-esc="rental.rental_date"/></div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="text-muted small">Due Date</div>
+                                                <div class="fw-bold"><t t-esc="rental.due_date"/></div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-muted small">Return Date</div>
+                                                <div class="fw-bold"><t t-esc="rental.return_date or '-'"/></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="col-md-6">
+                                    <div class="info-section mb-4">
+                                        <h3 class="h5 text-muted mb-3 border-bottom pb-2">
+                                            <i class="fa fa-book" aria-hidden="true"></i>Payment
+                                        </h3>
+                                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                            <div>
+                                                <div class="text-muted small">Total Rental Fee</div>
+                                                <div class="h4 text-primary mb-0">
+                                                    <t t-esc="rental.rental_fee"/>
+                                                    <t t-esc="rental.currency_id.symbol"/>
+                                                </div>
+                                            </div>
+                                            <i class="fa fa-wallet fa-2x text-muted"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-section">
+                                        <h3 class="h5 text-muted mb-3 border-bottom pb-2">
+                                            <i class="fa fa-books me-2"></i>Rented Books
+                                        </h3>
+                                        <div class="list-group">
+                                            <t t-foreach="rental.book_ids" t-as="book">
+                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <div class="fw-bold"><t t-esc="book.title"/></div>
+                                                        <small class="text-muted">ISBN: <t t-esc="book.isbn or 'N/A'"/></small>
+                                                    </div>
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="fa fa-book"></i>
+                                                    </span>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-light">
+                            <a href="/my/library/rental/" class="btn btn-outline-primary">
+                                <i class="fa fa-arrow-left me-2"></i>Back to My Rentals
+                            </a>
+                            <button class="btn btn-primary ms-2">
+                                <i class="fa fa-print me-2"></i>Print Receipt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </t>
+        </xpath>
+    </template>
+
+</odoo>
