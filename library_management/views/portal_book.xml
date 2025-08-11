@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_library_book"
+              name="Book of our library"
+              customize_show="True"
+              inherit_id="portal.portal_my_home"
+              priority="45">
+        <!-- Enable vendor category block if not already enabled -->
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_vendor_category_enable" t-value="True"/>
+        </xpath>
+        <!-- Insert the library portal card into the vendor category -->
+
+        <div id="portal_vendor_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/library_management/static/img/library.svg'"/>
+                <t t-set="title">Our Books</t>
+                <t t-set="text">Follow your favorite books in our library.</t>
+                <t t-set="url" t-value="'/my/library/book'"/>
+                <t t-set="placeholder_count" t-value="'rfq_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="library_book_list_view_portal">
+        <t t-call="portal.portal_layout">
+            <div class="container mt-4">
+                <style>
+                    .product-card {
+                        transition: all 0.3s ease;
+                        overflow: hidden;
+                        cursor: pointer;
+                    }
+
+                    .product-card:hover {
+                        transform: translateY(-5px);
+                        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .product-image {
+                        transition: all 0.5s ease;
+                        height: 300px;
+                        margin: 5px;
+                        object-fit: contain;
+                    }
+
+                    .product-card:hover .product-image {
+                        transform: scale(1.05);
+                    }
+
+                    .badge-custom {
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        z-index: 2;
+                    }
+
+                    .price {
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        color: #2c3e50;
+                    }
+
+                    .btn-custom {
+                        background: linear-gradient(45deg, #3498db, #2ecc71);
+                        border: none;
+                        transition: all 0.3s ease;
+                    }
+
+                    .btn-custom:hover {
+                        transform: translateX(5px);
+                        box-shadow: -5px 5px 15px rgba(46, 204, 113, 0.3);
+                    }
+                </style>
+                <div class="row justify-content-center">
+                    <t t-foreach="books" t-as="book">
+                        <div class="col-md-4 mb-3">
+                            <a t-attf-href="/my/library/book/#{book.id}" class="card product-card border rounded-4 shadow-sm">
+                                <div class="position-relative">
+                                    <span class="badge"
+                                          style=" position: absolute;
+                                                 top: 10px;
+                                                 right: 10px;
+                                                 z-index: 2;
+                                                 color: white;
+                                                 border-radius: 5px;
+                                                 padding: 0px 5px;"
+
+                                        t-attf-class="bg-{{ 'success' if book.status == 'available' else 'secondary' if book.status == 'borrowed' else 'warning' }}">
+                                        <t t-esc="book.status"/>
+                                    </span>
+                                    <div class="overflow-hidden">
+                                        <img t-if="book.image_1920" class="card-img-top product-image" t-att-src="image_data_uri(book.image_1920)" alt="Product Image"/>
+                                        <img t-else="else" class="card-img-top product-image" src="/library_management/static/img/book.jpg" alt="Product Image"/>
+
+                                    </div>
+                                </div>
+                                <div  class="card-body p-4 text-decoration-none text-dark">
+                                    <h5 class="card-title mb-3 fw-bold">
+                                        <t t-esc="book.title"/>
+                                    </h5>
+                                    <p class="card-text text-muted mb-4">
+                                        <small>By <span class="text-primary"><t t-esc="book.author_id.name"/></span></small>
+                                    </p>
+                                    <p class="card-text text-muted mb-4">
+                                        <small class="text-muted">
+                                            <i class="fa fa-barcode me-1"></i> <t t-esc="book.isbn"/>
+                                        </small>
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="price">
+                                            <t t-esc="book.currency_id.symbol"/>
+                                            <t t-esc="book.rental_fee"/>
+                                        </span>
+                                        <button class="btn btn-custom text-white px-4 py-2 rounded-pill">
+                                            View book
+                                        </button>
+                                  </div>
+                                </div>
+                            </a>
+                        </div>
+
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="library_book_form_view_portal" inherit_id="portal.portal_sidebar">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <t t-if="page_name == 'book_form_view'">
+                <div class="container py-5">
+                    <div class="row ">
+                        <!-- Product Images -->
+                        <div class="col-md-6">
+                            <div class="position-relative mb-4">
+<!--                                <span class="badge bg-danger discount-badge">25% OFF</span>-->
+                                <img id="mainImage" t-if="book.image_1920" t-att-src="image_data_uri(book.image_1920)" class="img-fluid rounded product-img" alt="book.title"/>
+                            </div>
+
+                        </div>
+
+                        <!-- Product Details -->
+                        <div class="col-md-6">
+                            <h1 class="mb-3"><t t-esc="book.title"/></h1>
+
+                            <div class="mb-3">
+                                <span class="rating">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-half-alt"></i>
+                                </span>
+                                <span class="ms-2">4.5 (128 reviews)</span>
+                            </div>
+
+                            <div class="price mb-3">
+                                <span class="text-success"><t t-esc="book.rental_fee"/></span>
+<!--                                <span class="original-price ms-2">$199.99</span>-->
+                            </div>
+
+                            <div class="mb-4">
+                                <h5 class="mb-3">Author:</h5>
+                                <ul class="list-unstyled">
+                                    <li><i class="fa fa-check text-success me-2"></i><t t-esc="book.author_id.name"/></li>
+                                </ul>
+                            </div>
+
+                            <div class="row mb-4">
+                            </div>
+
+                            <div class="d-flex gap-3 mb-4 mt-auto">
+                                <button class="btn btn-primary btn-lg flex-grow-1">
+                                    <i class="fa fa-shopping-cart me-2"></i> Rental this Book
+                                </button>
+                                <button class="btn btn-outline-secondary btn-lg">
+                                    <i class="fa fa-heart"></i>
+                                </button>
+                            </div>
+
+                            <div class="border-top pt-3">
+                                <p class="mb-1"><i class="fa fa-barcode me-1"></i><t t-esc="book.isbn"/></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Tabs -->
+                    <div class="row mt-5">
+                        <div class="col-12">
+                            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content p-3 border border-top-0 rounded-bottom" id="productTabsContent">
+                                <div class="tab-pane fade show active" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+                                    <h4>Customer Reviews</h4>
+
+                                    <div class="mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="rating me-2">
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                            </span>
+                                            <h5 class="mb-0">Excellent sound quality</h5>
+                                        </div>
+                                        <p class="text-muted">By John D. on March 15, 2023</p>
+                                        <p>These headphones exceeded my expectations. The noise cancellation works perfectly on my daily commute, and the battery lasts for days.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="rating me-2">
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="far fa-star"></i>
+                                            </span>
+                                            <h5 class="mb-0">Great value for money</h5>
+                                        </div>
+                                        <p class="text-muted">By Sarah M. on February 28, 2023</p>
+                                        <p>I compared several models in this price range and these were clearly the best. Very comfortable for long listening sessions.</p>
+                                    </div>
+
+                                    <button class="btn btn-outline-primary">Write a Review</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </t>
+        </xpath>
+    </template>
+
+     <template id="portal_book_breadcrumbs" inherit_id="portal.portal_breadcrumbs">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'library_books'" class="breadcrumb-item">
+                Books
+            </li>
+        </xpath>
+    </template>
+    <template id="portal_book_detail_breadcrumbs" inherit_id="portal.portal_breadcrumbs">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'book_form_view'" class="breadcrumb-item">
+                <a t-attf-href="/my/library/book">
+                    Books
+                </a>
+            </li>
+            <li t-if="page_name == 'book_form_view'" class="breadcrumb-item">
+                <t t-esc="book.title"/>
+            </li>
+        </xpath>
+    </template>
+</odoo>

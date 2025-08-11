@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Library_Management",
+    'name': "qrcode",
 
     'summary': "Short (1 phrase/line) summary of the module's purpose",
 
@@ -18,27 +18,15 @@ Long description of module's purpose
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'web', 'mail', 'portal'],
+    'depends': ['account'],
 
     # always loaded
     'data': [
-        'data/cron.xml',
-        'data/mail_template.xml',
+        'security/security.xml',
         'security/ir.model.access.csv',
-
-        'views/portal_template_view.xml',
-        'views/portal_book.xml',
-        'views/library_dashboard.xml',
-
-        'views/book_views.xml',
-        'views/author_views.xml',
-        'views/member_views.xml',
-        'views/rental_views.xml',
-        'reports/book_report.xml',
-        'reports/report_rental_wizard.xml',
-        'reports/rental_report.xml',
-        'reports/rental_report_templates.xml',
+        'views/qrcode_views.xml',
+        'views/account_move_qrcode_view.xml',
+        # 'views/templates.xml',
     ],
-
 }
 

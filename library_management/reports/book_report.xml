@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="book_report_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page" style="font-family: 'Calibri'; font-size: 18px; color: #21335B; padding: 100px">
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <span t-field="doc.title" style="font-size: 78px" class="text-bolder"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <div class="h-100">
+                                <img alt="Image is not loading..." t-if="doc.image_1920" t-att-src="image_data_uri(doc.image_1920)" class="w-100"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <span t-field="doc.book_age" style="font-size: 78px" class="text-bolder"/>
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </template>
+    <record id="library_book_report" model="ir.actions.report">
+        <field name="name">Book Report</field>
+        <field name="model">library.book</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">library_management.book_report_template</field>
+        <field name="report_file">library_management.book_report_template</field>
+        <field name="print_report_name">'Book-%s' % (object.title)</field>
+        <field name="binding_model_id" ref="library_management.model_library_book"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

@@ -1,0 +1,109 @@
+<odoo>
+  <template id="report_rental_template_form">
+    <div class="page">
+      <div style="height: 100px">
+
+      </div>
+        <h1 class="text-center">Rental Report</h1>
+        <div class="container">
+          <div class="row bg-light fw-bold py-2" style="border-bottom: 2px solid orange;">
+            <div class="col col-2 py-2">Member</div>
+            <div class="col col-5 py-2">Book</div>
+            <div class="col col-2 py-2 text-center">Rental Date</div>
+            <div class="col col-2 py-2 text-center">Return Date</div>
+            <div class="col col-1 py-2 text-center">Status</div>
+          </div>
+
+          <!-- Data Rows -->
+          <t t-foreach="docs" t-as="rental">
+            <t t-set="state_class" t-value="{
+    'returned': 'badge bg-success text-light',
+    'late': 'badge bg-danger text-light',
+    'ongoing': 'badge bg-warning text-dark'
+}.get(rental.state, 'badge bg-secondary')"/>
+            <div class="row py-2" style="border-bottom: 1px solid orange;">
+              <div class="col col-2 py-2"><t t-esc="rental.member_id.name"/></div>
+              <div class="col col-5 py-2"><t t-esc="', '.join(rental.book_ids.mapped('title'))"/></div>
+              <div class="col col-2 py-2 text-center"><t t-esc="rental.rental_date"/></div>
+              <div class="col col-2 py-2 text-center"><t t-esc="rental.return_date"/></div>
+              <div class="col col-1 py-2 text-center">
+                <span t-attf-class="p-1 rounded-pill {{ state_class }}" style="border-radius:10px;">
+                  <t t-esc="rental.state.capitalize()"/>
+                </span>
+              </div>
+            </div>
+          </t>
+        </div>
+
+      </div>
+  </template>
+  <template id="report_rental_template_list">
+     <div class="page">
+       <div style="height: 100px">
+
+      </div>
+        <h1 class="text-center text-primary">Rental Report</h1>
+        <t t-set="start_date" t-value="data['start_date'] if data else ''"/>
+        <t t-set="end_date" t-value="data['end_date'] if data else ''"/>
+        <p>From: <t t-esc="start_date"/> </p>
+        <p>To: <t t-esc="end_date"/></p>
+        <div class="container">
+  <!-- Header Row -->
+          <div class="row bg-light fw-bold py-2" style="border-bottom: 2px solid orange;">
+            <div class="col col-2 py-2">Member</div>
+            <div class="col col-4 py-2">Book</div>
+            <div class="col col-2 py-2 text-center">Rental Date</div>
+            <div class="col col-2 py-2 text-center">Return Date</div>
+            <div class="col col-1 py-2 text-center">Status</div>
+            <div class="col col-1 py-2 text-center">Rental fee</div>
+          </div>
+
+          <!-- Data Rows -->
+          <t t-foreach="docs" t-as="rental">
+            <t t-set="state_class" t-value="{
+    'returned': 'badge bg-success text-light',
+    'late': 'badge bg-danger text-light',
+    'ongoing': 'badge bg-warning text-dark'
+}.get(rental.state, 'badge bg-secondary')"/>
+            <div class="row py-2" style="border-bottom: 1px solid orange;">
+              <div class="col col-2 py-2"><t t-esc="rental.member_id.name"/></div>
+              <div class="col col-4 py-2"><t t-esc="', '.join(rental.book_ids.mapped('title'))"/></div>
+              <div class="col col-2 py-2 text-center"><t t-esc="rental.rental_date"/></div>
+              <div class="col col-2 py-2 text-center"><t t-esc="rental.return_date"/></div>
+              <div class="col col-1 py-2 text-center">
+                <span t-attf-class="p-1 rounded-pill {{ state_class }}" style="border-radius:10px;">
+                  <t t-esc="rental.state.capitalize()"/>
+                </span>
+              </div>
+              <div class="col col-1 py-2 text-center">
+                <t t-esc="rental.rental_fee" t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/>
+              </div>
+            </div>
+          </t>
+          <t t-set="sum_total_fee" t-value="sum(docs.mapped('rental_fee'))"/>
+
+          <!-- Display the total -->
+          <div class="row mt-3">
+            <div class="col col-10 py-2 pe-2 text-end">
+              Total fee:
+            </div>
+            <div class="col col-2 text-end">
+              <h5><t t-esc="sum_total_fee" t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/></h5>
+            </div>
+          </div>
+        </div>
+      </div>
+  </template>
+  <template id="report_rental_template">
+    <t t-call="web.basic_layout">
+
+     <t t-if="len(doc_ids) == 1">
+        <t t-call="library_management.report_rental_template_form"/>
+      </t>
+      <t t-else="">
+        <!-- List view template content -->
+        <t t-call="library_management.report_rental_template_list"/>
+      </t>
+    </t>
+  </template>
+</odoo>

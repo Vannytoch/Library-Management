@@ -1,40 +1,194 @@
-
 from odoo import models, fields, api
-import re
+from odoo.exceptions import UserError
+from werkzeug.urls import url_encode
+import base64
 
-class LibrayManagement(models.Model):
-    _name = 'library.book'
-    _description = 'Book in the library'
 
-    title = fields.Char(string="Title", required=True)
-    author = fields.Char(string="Author")
-    isbn = fields.Char(string="ISBN", size=17, help="13-Digits ISBN number")
-    publication_date = fields.Date(string="Publication Date")
+class RentalReportWizard(models.TransientModel):
+    _name = 'library.rental.report.wizard'
+    _description = 'Library Rental Report Wizard'
 
-    @api.onchange('isbn')
-    def _onchange_isbn(self):
-        if self.isbn:
-            # Remove all non-digit characters
-            digits = re.sub(r'\D', '', self.isbn)
+    start_date = fields.Date(string="Start Date")
+    end_date = fields.Date(string="End Date")
+    add_data = fields.Binary(string="Import Data")
+    file_name = fields.Char(string="File Name")
+    export_file = fields.Binary(string='Download File', readonly=True)
+    export_file_name = fields.Char(string="File Name")
+    count_data = fields.Integer(string="Data count" ,compute="_compute_data_count")
 
-            if len(digits) == 13:
-                # Format as 978-3-16-148410-0
-                self.isbn = f"{digits[0:3]}-{digits[3]}-{digits[4:6]}-{digits[6:12]}-{digits[12]}"
+    # status
+    is_draft = fields.Boolean(string="Draft")
+    is_confirmed = fields.Boolean(string="Confirmed")
+    is_active = fields.Boolean(string="Active")
+    is_returned = fields.Boolean(string="Returned")
+    is_overdue = fields.Boolean(string="Overdue")
+
+    def onchange_status(self):
+        state = []
+        for rec in self:
+            if rec.is_draft:
+                state.append('draft')
             else:
-                self.isbn=digits
-                return {
-                    'warning': {
-                        'title': "Invalid ISBN",
-                        'message': "ISBN must contain exactly 13 digits.",
-                    }
-                }
+                if 'draft' in state:
+                    state.remove('draft')
 
-    @api.model
-    def create(self, vals):
-        if 'isbn' in vals and vals['isbn']:
-            digits = re.sub(r'\D', '', vals['isbn'])  # Remove all non-digit characters
-            if len(digits) == 13:
-                vals['isbn'] = digits  # Store plain 13-digit value
+            if rec.is_confirmed:
+                state.append('confirmed')
             else:
-                del vals['isbn']
-        return super(LibrayManagement, self).create(vals)
+                if 'confirmed' in state:
+                    state.remove('confirmed')
+
+            if rec.is_active:
+                state.append('active')
+            else:
+                if 'active' in state:
+                    state.remove('active')
+
+            if rec.is_returned:
+                state.append('returned')
+            else:
+                if 'returned' in state:
+                    state.remove('returned')
+
+            if rec.is_overdue:
+                state.append('overdue')
+            else:
+                if 'overdue' in state:
+                    state.remove('overdue')
+        return state
+
+    @api.depends('start_date', 'end_date', 'is_draft','is_confirmed' ,'is_active' ,'is_returned', 'is_overdue')
+    def _compute_data_count(self):
+        for rec in self:
+            if rec.start_date and rec.end_date:
+                status = self.onchange_status()
+                if len(status)>0:
+                    data = self.env['library.rental'].search_count([
+                        ('rental_date', '>=', rec.start_date),
+                        ('rental_date', '<=', rec.end_date),
+                        ('state', 'in', status)
+                    ])
+                else:
+                    data = self.env['library.rental'].search_count([
+                        ('rental_date', '>=', rec.start_date),
+                        ('rental_date', '<=', rec.end_date)
+                    ])
+                rec.count_data = data
+            else:
+                rec.count_data = 0
+
+    def action_import_data(self):
+        for wizard in self:
+            if not wizard.add_data:
+                raise UserError("Please upload a file.")
+
+            file_name = (wizard.file_name or "").lower()
+            file_content = base64.b64decode(wizard.add_data)
+
+            if file_name.endswith('.csv'):
+                import csv
+                from io import StringIO
+                # Handle CSV
+                csv_data = csv.reader(StringIO(file_content.decode('utf-8')))
+                for row in csv_data:
+                    print("\n",row,"\n")  # Process CSV row here
+                    # create record logic...
+
+            elif file_name.endswith('.xlsx'):
+                import openpyxl
+                from io import BytesIO
+                # Handle Excel .xlsx
+                workbook = openpyxl.load_workbook(filename=BytesIO(file_content))
+                sheet = workbook.active
+                for row in sheet.iter_rows(min_row=2, values_only=True):  # skip header
+                    book_titles_raw = row[0]
+                    due_date = row[1]
+                    member = row[2]
+                    rental_date = row[3]
+                    rental_fee = row[4]
+                    return_date = row[5]
+                    status = row[6]
+                    member_id =0
+                    if member:
+                        member_id = self.env['library.member'].search([('name', '=', member)], limit=1)
+                    # Convert titles to book IDs
+                    book_ids_list = []
+                    if book_titles_raw:
+                        book_titles = [title.strip() for title in str(book_titles_raw).split(',')]
+                        for title in book_titles:
+                            book = self.env['library.book'].search([('title', '=', title)], limit=1)
+                            if book:
+                                book_ids_list.append(book.id)
+                            else:
+                                raise UserError(f"Book with title '{title}' not found.")
+
+                    # Create rental record
+                    self.env['library.rental'].create({
+                        'member_id': member_id.id,
+                        'book_ids': [(6, 0, book_ids_list)],
+                        'rental_date': rental_date,
+                        'due_date': due_date,
+                        'return_date': return_date,
+                        'rental_fee': rental_fee,
+                        'state': status.lower(),
+                    })
+
+            else:
+                raise UserError("Unsupported file format. Please upload CSV or XLSX file.")
+            # ✅ return action to keep the wizard open
+
+    def action_export_data(self):
+        # Generate URL with params
+        base_url = '/library/export_rental_xlsx?'
+        # Start building query parameters
+        query_params = {}
+        # Add start and end date if they exist
+        if self.start_date:
+            query_params['start_date'] = str(self.start_date)
+        if self.end_date:
+            query_params['end_date'] = str(self.end_date)
+        # Add state only if onchange_status() returns something
+        state_list = self.onchange_status()
+        if state_list:
+            query_params['state'] = ','.join(state_list)
+        # Now encode the final query string
+        query = url_encode(query_params)
+        full_url = base_url + query
+
+        return {
+            'type': 'ir.actions.act_url',
+            'url': full_url,
+            'target': 'self',
+        }
+
+
+    def action_generate_report(self):
+        if self.count_data <1:
+            raise UserError("No data to generate!")
+        data = {
+            'form': {
+                'start_date': self.start_date,
+                'end_date': self.end_date,
+            }
+        }
+        return self.env.ref('library_management.action_rental_report_pdf').report_action(self, data=data)
+
+
+
+
+class LibraryRentalReturnWizard(models.TransientModel):
+    _name = 'library.rental.return.wizard'
+    _description = 'Bulk Rental Return Wizard'
+
+    rental_ids = fields.Many2many('library.rental', string='Rentals to Return', required=True)
+
+    def confirm_returns(self):
+        for rental in self.rental_ids:
+            if rental.state not in ('active', 'overdue'):
+                raise UserError("Only Active or Overdue rentals can be returned.")
+            if rental.return_date and rental.return_date < rental.rental_date:
+                raise UserError("Can't return, Check rental date and current date.")
+            rental.state = 'returned'
+            rental.return_date = fields.Date.today()
+        return {'type': 'ir.actions.act_window_close'}
+
