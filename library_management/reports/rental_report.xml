@@ -1,0 +1,12 @@
+<odoo>
+    <record id="action_rental_report_pdf" model="ir.actions.report">
+        <field name="name">Rental Report</field>
+        <field name="model">library.rental</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">library_management.report_rental_template</field>
+        <field name="report_file">library_management.report_rental_template</field>
+        <field name="print_report_name">'Report_Rental-%s' % (object.id)</field>
+        <field name="binding_model_id" ref="library_management.model_library_rental"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>
