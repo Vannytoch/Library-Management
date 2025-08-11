@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_home_library"
+              name="Library Management"
+              customize_show="True"
+              inherit_id="portal.portal_my_home"
+              priority="45">
+        <!-- Enable vendor category block if not already enabled -->
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_vendor_category_enable" t-value="True"/>
+        </xpath>
+        <!-- Insert the library portal card into the vendor category -->
+        <div id="portal_vendor_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Library Management</t>
+                <t t-set="text">Follow your borrowed books and history</t>
+                <t t-set="url" t-value="'/my/library'"/>
+            </t>
+        </div>
+    </template>
+</odoo>
