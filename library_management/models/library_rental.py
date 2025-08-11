@@ -59,14 +59,11 @@ class RentalSystem(models.Model):
         import logging
         _logger = logging.getLogger(__name__)
         template = self.env.ref('library_management.email_template_rental_overdue', raise_if_not_found=False)
-        print("\n\n\nHello me\n\n\n\n")
 
         if not template:
             _logger.warning("Email template NOT found: library_management.email_template_rental_overdue")
         else:
             template.send_mail(self.id, force_send=True)
-            if self.member_id.email:
-                print("\n\n\n",self.member_id.email,"\n\n\n\n")
 
     @api.model
     def update_overdue_states(self):
@@ -116,7 +113,6 @@ class RentalSystem(models.Model):
 
     @api.model
     def create(self, vals):
-        print('\n\n\n\n',vals, '\n\n\n')
         self.check_due_date()
         res = super().create(vals)
         res.write({'name': f"R{res.id:06d}"})

@@ -43,24 +43,4 @@ class LibraryDashboardPortal(CustomerPortal):
             'page_name':'library_dashboard'
         }
 
-        # # Get book data - example implementation
-        # Book = request.env['library.rental']
-        # book_data = []
-        # months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-        #
-        # for i, month in enumerate(months, start=1):
-        #     issued = Book.search_count([
-        #         ('issue_date', '>=', f'2023-{i:02d}-01'),
-        #         ('issue_date', '<=', f'2023-{i:02d}-31')
-        #     ])
-        #     returned = Book.search_count([
-        #         ('return_date', '>=', f'2023-{i:02d}-01'),
-        #         ('return_date', '<=', f'2023-{i:02d}-31')
-        #     ])
-        #     book_data.append({
-        #         'name': month,
-        #         'issued': issued,
-        #         'returned': returned
-        #     })
-
         return request.render('library_management.library_dashboard_template', data)
