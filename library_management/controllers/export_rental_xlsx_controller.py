@@ -1,8 +1,6 @@
-# controllers/main.py
 from odoo import http
 from odoo.http import request
 import io
-import base64
 import openpyxl
 from datetime import datetime
 from openpyxl.styles import Alignment

@@ -1,7 +1,6 @@
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.http import request
 from odoo import http
-import calendar
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 

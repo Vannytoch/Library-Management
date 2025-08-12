@@ -90,8 +90,7 @@ class RentalReportWizard(models.TransientModel):
                 from io import StringIO
                 # Handle CSV
                 csv_data = csv.reader(StringIO(file_content.decode('utf-8')))
-                for row in csv_data:
-                    print("\n",row,"\n")  # Process CSV row here
+                    # Process CSV row here
                     # create record logic...
 
             elif file_name.endswith('.xlsx'):
@@ -172,23 +171,3 @@ class RentalReportWizard(models.TransientModel):
             }
         }
         return self.env.ref('library_management.action_rental_report_pdf').report_action(self, data=data)
-
-
-
-
-class LibraryRentalReturnWizard(models.TransientModel):
-    _name = 'library.rental.return.wizard'
-    _description = 'Bulk Rental Return Wizard'
-
-    rental_ids = fields.Many2many('library.rental', string='Rentals to Return', required=True)
-
-    def confirm_returns(self):
-        for rental in self.rental_ids:
-            if rental.state not in ('active', 'overdue'):
-                raise UserError("Only Active or Overdue rentals can be returned.")
-            if rental.return_date and rental.return_date < rental.rental_date:
-                raise UserError("Can't return, Check rental date and current date.")
-            rental.state = 'returned'
-            rental.return_date = fields.Date.today()
-        return {'type': 'ir.actions.act_window_close'}
-

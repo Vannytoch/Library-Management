@@ -9,16 +9,15 @@ class LibraryManagement(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'title'
 
-    title = fields.Char(string="Title", required=True)
+    title = fields.Char(string="Title", required=True, tracking=True)
     isbn = fields.Char(string="ISBN", size=17, help="13-Digits ISBN number")
     publication_date = fields.Date(string="Publication Date")
-    author_id = fields.Many2one('library.author', string="Author")
+    author_id = fields.Many2one('library.author', string="Author", tracking=True)
     image_1920 = fields.Binary(string="Cover image")
     book_age = fields.Integer(string="Book Age (Years)", compute="_compute_book_age", store=True)
     member_id = fields.Many2one('library.member',tracking=True, string="Borrowing by")
-
-
-    rental_fee = fields.Monetary(string="Rental Fee", default=1.0)
+    rental_fee = fields.Monetary(string="Rental Fee", default=1.0, tracking=True)
+    total_rental = fields.Float(string="Total Rental", compute="_compute_total_rental", store=True)
     currency_id = fields.Many2one(
         'res.currency',
         string="Currency",
@@ -27,10 +26,6 @@ class LibraryManagement(models.Model):
         readonly=True,
         required=True
     )
-
-
-
-    total_rental = fields.Float(string="Total Rental", compute="_compute_total_rental", store=True)
     status = fields.Selection([
         ('available', 'Available'),
         ('borrowed', 'Borrowed'),
@@ -46,24 +41,10 @@ class LibraryManagement(models.Model):
         ('science', 'Science'),
     ], string="Genre")
 
-    @api.depends('member_id', 'message_ids')
+    @api.depends('member_id', 'message_ids', 'status')
     def _compute_total_rental(self):
-        pattern = re.compile(r'Rental fee:\s*\$?([0-9,.]+)')
-        for book in self:
-            total = 0.0
-            for msg in book.message_ids:
-                if msg.body:
-                    # Search for "Rental fee: $xxx.xx" pattern
-                    match = pattern.search(msg.body)
-                    if match:
-                        # Remove commas and convert to float
-                        amount_str = match.group(1).replace(',', '')
-                        try:
-                            amount = float(amount_str)
-                            total += amount
-                        except ValueError:
-                            pass
-            book.total_rental = total
+        rentals = self.env['library.rental'].search_count([('book_ids', 'in', self.id), ('state', '!=', 'draft')])
+        self.total_rental = rentals * self.rental_fee
 
     @api.depends('rental_fee')
     def _compute_currency(self):
@@ -101,7 +82,6 @@ class LibraryManagement(models.Model):
                     }
                 }
 
-
     @api.model
     def create(self, vals):
         if 'isbn' in vals and vals['isbn']:
@@ -110,15 +90,6 @@ class LibraryManagement(models.Model):
                 vals['isbn'] = digits  # Store plain 13-digit value
             else:
                 del vals['isbn']
-        for record in self:
-            if 'member_id' in vals:
-                member_id = vals['member_id']
-                member = self.env['library.member'].browse(member_id)
-                record.message_post(
-                    body=Markup(
-                        f"<h3>This 📘 Book borrowed by: {new_member.name} <br/>Rental fee: {record.currency_id.symbol}{record.rental_fee}</h3>")
-                )
-
         return super(LibraryManagement, self).create(vals)
 
     @api.model
@@ -147,16 +118,19 @@ class LibraryManagement(models.Model):
                     if rental:
                         vals.pop('status')
                         raise UserError("Cannot mark as 'available': The book is currently rented and lost.")
-
-        for rec in self:
-            if 'status' in vals and vals['status'] in ['borrowed', 'lost']:
-                rental = self.env['library.rental'].search([
-                    ('state', 'not in', ['returned', 'draft']),
-                    ('book_ids', '=', rec.id)
-                ], limit=1)
-                vals['member_id'] = rental.member_id if rental else False
-            else:
-                vals['member_id'] = False
-
+            elif 'status' in vals and self.env.context.get('from_member_form'):
+                for rec in self:
+                    if 'status' in vals and vals['status'] in ['borrowed', 'lost']:
+                        rental = self.env['library.rental'].search([
+                            ('state', 'not in', ['draft', 'returned']),
+                            ('book_ids', '=', rec.id)
+                        ], limit=1)
+                        if rental:
+                            vals['member_id'] = rental.member_id
+                        else:
+                            if vals['status'] == 'borrowed' and rec.status == 'lost':
+                                raise UserError("Not sure member for rental")
+                    else:
+                        vals['member_id'] = False
         res = super().write(vals)
         return res

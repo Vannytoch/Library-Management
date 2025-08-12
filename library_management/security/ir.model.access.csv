@@ -3,7 +3,6 @@ access_library_book,access.library.book.user,model_library_book,base.group_user,
 access_library_author,access.library.author.user,model_library_author,base.group_user,1,1,1,1
 access_library_member,access.library.member.user,model_library_member,base.group_user,1,1,1,1
 access_library_rental,access.library.rental.user,model_library_rental,base.group_user,1,1,1,1
-access_library_rental_return_wizard,Bulk Rental Return Wizard,model_library_rental_return_wizard,,1,1,1,1
 access_library_rental_report_wizard,Library Rental Report Wizard,model_library_rental_report_wizard,,1,1,1,1
 
 

@@ -56,12 +56,10 @@ class RentalSystem(models.Model):
     is_visible_due = fields.Date(default=date.today(), required=True)
 
     def action_send_mail_rental(self):
-        import logging
-        _logger = logging.getLogger(__name__)
-        template = self.env.ref('library_management.email_template_rental_overdue', raise_if_not_found=False)
 
+        template = self.env.ref('library_management.email_template_rental_overdue', raise_if_not_found=False)
         if not template:
-            _logger.warning("Email template NOT found: library_management.email_template_rental_overdue")
+            raise UserError("Email template NOT found: library_management.email_template_rental_overdue")
         else:
             template.send_mail(self.id, force_send=True)
 
@@ -73,8 +71,11 @@ class RentalSystem(models.Model):
             ('return_date', '=', False),
             ('state', '!=', 'returned')
         ])
+        template = self.env.ref('library_management.email_template_rental_overdue', raise_if_not_found=False)
         for rental in overdue_rentals:
             rental.state = 'overdue'
+            if template and rental.member_id.email:
+                template.send_mail(rental.id, force_send=True)
 
     @api.depends('state', 'book_ids')
     def _compute_available_books(self):
@@ -160,13 +161,15 @@ class RentalSystem(models.Model):
             for book in books:
                 if book.status == 'borrowed':
                     raise UserError(f"The book '{book.title}' is not available (already borrowed).")
+                elif book.status == 'available':
+                    self.env['library.book'].browse(book.id).with_context(from_member_form=True).write(
+                        {'status': 'borrowed'})
         # Apply status changes for added/removed books
-        if added_books and 'state' in vals and 'draft' not in vals['state']:
-            if 'state' in vals and vals['state'] == 'confirmed':
-                books = self.env['library.book'].browse(added_books)
-                for book in books:
-                    if book.status == 'borrowed':
-                        raise UserError(f"The book '{book.title}' is not available (already borrowed).")
+        if added_books and 'state' in vals and 'draft' not in vals['state'] and vals['state'] == 'confirmed':
+            books = self.env['library.book'].browse(added_books)
+            for book in books:
+                if book.status == 'borrowed':
+                    raise UserError(f"The book '{book.title}' is not available (already borrowed).")
 
             self.env['library.book'].browse(list(added_books)).with_context(from_member_form=True).write(
                 {'status': 'borrowed'})
@@ -175,14 +178,18 @@ class RentalSystem(models.Model):
                 {'status': 'available'})
         if 'state' in vals and 'draft' not in vals['state'] and 'book_ids' not in vals:
              self.env['library.book'].browse(self.book_ids.ids).with_context(from_member_form=True).write(
-                {'status': 'borrowed'})
+                {'status': 'borrowed', 'member_id': vals.get('member_id', self.member_id.id)})
         # Call super to write vals
         result = super().write(vals)
         # Handle state change to 'returned'
+        if 'state' in vals and self.state and vals['state'] in ['draft'] and self.state not in ['draft']:
+            for rec in self:
+                rec.book_ids.with_context(from_member_form=True).write(
+                {'status': 'available'})
+
         if 'state' in vals and vals['state'] in ['returned', 'draft']:
             for rec in self:
-                rec.book_ids.with_context(from_member_form=True).write({'status': 'available'})
-
+                rec.book_ids.with_context(from_member_form=True).write({'status': 'available', 'member_id': vals.get('member_id', self.member_id.id)})
 
         return result
 
@@ -210,16 +217,14 @@ class RentalSystem(models.Model):
             rec.state = 'active'
 
     def action_return(self):
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Return Rentals',
-            'res_model': 'library.rental.return.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_rental_ids': self.ids,
-            }
-        }
+        for rental in self:
+            if rental.state not in ('active', 'overdue'):
+                raise UserError("Only Active or Overdue rentals can be returned.")
+            if rental.return_date and rental.return_date < rental.rental_date:
+                raise UserError("Can't return, Check rental date and current date.")
+            rental.state = 'returned'
+            rental.return_date = fields.Date.today()
+
 
 
     def action_mark_overdue(self):
@@ -235,6 +240,7 @@ class RentalSystem(models.Model):
             rec.state = 'draft'
             rec.rental_date = date.today()
             rec.due_date = date.today() + relativedelta(months=1)
+
             rec.return_date = False
 
     def action_create_report(self):

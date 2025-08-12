@@ -101,23 +101,5 @@
     <menuitem id="menu_library_rental_action" name="Rental Records" parent="library_book_root_menu" action="action_library_rental"/>
 
 
-<!--    Wizard for return-->
-    <record id="view_library_rental_return_wizard" model="ir.ui.view">
-        <field name="name">library.rental.return.wizard.form</field>
-        <field name="model">library.rental.return.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Return Rentals">
-
-                <group>
-                    <field name="rental_ids" widget="many2many_tags"/>
-                </group>
-                <footer>
-                    <button name="confirm_returns" type="object" string="Confirm Return" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-
 </odoo>
 

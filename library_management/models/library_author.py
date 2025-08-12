@@ -1,5 +1,4 @@
 from odoo import models, fields, api
-from datetime import datetime
 import re
 
 class Author(models.Model):
@@ -24,13 +23,3 @@ class Author(models.Model):
                         'message': "Please enter a valid email address (e.g., user@example.com)."
                     }
                 }
-
-    # @api.depends('dob')
-    # def _compute_age(self):
-    #     for res in self:
-    #         if res.dob:
-    #             today = datetime.today().date()
-    #             dob = res.dob
-    #             res.age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-    #         else:
-    #             res.age = 0
