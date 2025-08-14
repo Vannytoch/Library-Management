@@ -110,7 +110,7 @@ class RentalReportWizard(models.TransientModel):
                         # Blank row → add books to last rental only
                         if not last_rental:
                             continue  # skip if no rental exists yet
-                        book_titles_raw = row[6]  # or some column that contains books
+                        book_titles_raw = row[7]  # or some column that contains books
                         # Convert titles to rental lines
                         rental_lines = []
                         if book_titles_raw:
@@ -128,16 +128,16 @@ class RentalReportWizard(models.TransientModel):
                         continue  # skip creating a new rental
 
                     book_titles_raw = row[0]
-
-                    due_date = row[0]
-                    member = row[1]
-                    rental_date = row[2]
-                    rental_fee = row[3]
-                    return_date = row[4]
-                    status = row[5]
-                    title = row[6]
-                    qty = row[7]
-                    discount = row[8]
+                    name = row[0]
+                    due_date = row[1]
+                    member = row[2]
+                    rental_date = row[3]
+                    rental_fee = row[4]
+                    return_date = row[5]
+                    status = row[6]
+                    title = row[7]
+                    qty = row[8]
+                    discount = row[9]
                     member_id =0
 
                     if member:
@@ -156,6 +156,7 @@ class RentalReportWizard(models.TransientModel):
 
                     # Create rental record
                     last_rental = self.env['library.rental'].create({
+                        'name': name,
                         'member_id': member_id.id,
                         'rental_line_ids': rental_line,
                         'rental_date': rental_date,
