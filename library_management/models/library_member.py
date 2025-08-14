@@ -15,7 +15,6 @@ class LibraryMember(models.Model):
     image_1920 = fields.Binary(string="Photo")
     email = fields.Char(string="Email", required=True)
     address = fields.Text(string="Address")
-    total_rental = fields.Float(string="Total Rental", compute="_compute_total_rental", store=True)
     membership_id = fields.Char(
         string="Membership ID",
         compute='_compute_membership_id',
@@ -34,46 +33,7 @@ class LibraryMember(models.Model):
     )
     contact = fields.Char(string="Emergency Contact")
     institution = fields.Char(string="Institution")
-    book_id = fields.One2many(
-        'library.book',  # target model
-        'member_id',  # inverse field (many2one field in `library.book`)
-        string="Book",
-        tracking=False,
-    )
-    available_book_ids = fields.Many2many('library.book', compute='_compute_available_books')
 
-    @api.depends('membership_id')
-    def _compute_available_books(self):
-        # Search all available books
-
-        book_ids = self.book_id.ids
-        if book_ids:
-            domain = ['|', ('id', 'in', book_ids), ('status', '=', 'available')]
-        else:
-            domain = [('status', '=', 'available')]
-
-        available_book_ids = self.env['library.book'].search(domain)
-        for member in self:
-            member.available_book_ids = available_book_ids
-
-    @api.depends('book_id', 'message_ids')
-    def _compute_total_rental(self):
-        pattern = re.compile(r'-\s*\$?\s*([0-9,.]+)')
-        for book in self:
-            total = 0.0
-            for msg in book.message_ids:
-                if msg.body:
-                    # Search for "Rental fee: $xxx.xx" pattern
-                    match = pattern.search(msg.body)
-                    if match:
-                        # Remove commas and convert to float
-                        amount_str = match.group(1).replace(',', '')
-                        try:
-                            amount = float(amount_str)
-                            total += amount
-                        except ValueError:
-                            pass
-            book.total_rental = total
 
     @api.depends('expiry_date')
     def _compute_membership_id(self):
@@ -128,47 +88,4 @@ class LibraryMember(models.Model):
                 vals['membership_id'] = f"{prefix}{new_number:05d}"
 
         records = super(LibraryMember, self).create(vals_list)
-
-        for record in records:
-            if record.book_id:
-                lines = []
-                for book in record.book_id:
-                    symbol = book.currency_id.symbol or ''
-                    lines.append(f"- {book.title} - {symbol}{book.rental_fee:.2f}")
-                    book.status = 'borrowed'
-                message = "📘 Member borrowed book(s) at registration:<br/>" + "<br/>".join(lines)
-                record.message_post(body=Markup(message))
-
         return records
-
-    def write(self, vals):
-        old_book_map = {rec.id: rec.book_id.ids for rec in self}
-
-        result = super(LibraryMember, self).write(vals)
-
-        for record in self:
-            if 'book_id' in vals:
-                old_books = set(old_book_map.get(record.id, []))
-                new_books = set(record.book_id.ids)
-
-                added_book_ids = list(new_books - old_books)
-                removed_book_ids = list(old_books - new_books)
-
-                if added_book_ids:
-                    added_books = self.env['library.book'].browse(added_book_ids)
-                    lines = []
-                    for book in added_books:
-                        symbol = book.currency_id.symbol or ''
-                        lines.append(f"- {book.title} - {symbol}{book.rental_fee:.2f}")
-                    added_books.with_context(from_member_form=True).write({'status': 'borrowed'})
-                    message = "📘 Member borrowed new book(s):<br/>" + "<br/>".join(lines)
-                    record.message_post(body=Markup(message))
-
-                if removed_book_ids:
-                    removed_books = self.env['library.book'].browse(removed_book_ids)
-                    book_names = removed_books.mapped('title')
-                    removed_books.with_context(from_member_form=True).write({'status': 'available'})
-                    message = "📤 Member returned book(s): <b>" + ", ".join(book_names) + "</b>"
-                    record.message_post(body=Markup(message))
-
-        return result

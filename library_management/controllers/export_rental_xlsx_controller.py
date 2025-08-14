@@ -1,8 +1,6 @@
-# controllers/main.py
 from odoo import http
 from odoo.http import request
 import io
-import base64
 import openpyxl
 from datetime import datetime
 from openpyxl.styles import Alignment
@@ -27,7 +25,7 @@ class RentalReportController(http.Controller):
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = 'Rental Report'
-        ws.append(['Book', 'Due Date', 'Member', 'Rental Date', 'Rental Fee', 'Return Date', 'Status'])
+        ws.append(['Number', 'Due Date', 'Member', 'Rental Date', 'Rental Fee', 'Return Date', 'Status', 'Book Title', 'Quantity', 'Discount'])
 
         ws.column_dimensions['A'].width = 30  # Book Title
         ws.column_dimensions['B'].width = 30  # Date
@@ -36,14 +34,22 @@ class RentalReportController(http.Controller):
         ws.column_dimensions['E'].width = 30  # Fee
         ws.column_dimensions['F'].width = 30  # Return
         ws.column_dimensions['G'].width = 30  # State
+        ws.column_dimensions['H'].width = 30  # State
+        ws.column_dimensions['I'].width = 30  # State
+        ws.column_dimensions['J'].width = 30  # State
+
 
         for r in rentals:
-            book_title = ', '.join(r.book_ids.mapped('title'))
-            ws.append([book_title, r.due_date, r.member_id.name, r.rental_date, r.rental_fee, r.return_date, r.state])
+            for i, line in enumerate(r.rental_line_ids):
+                if i == 0:
+                    ws.append([r.name, r.due_date, r.member_id.name, r.rental_date, r.total_amount, r.return_date, r.state,
+                               line.book_id.title, line.qty, line.discount])
+                else:
+                    ws.append(['', '', '', '', '', '', '', line.book_id.title, line.qty, line.discount])
 
         wrap_alignment = Alignment(wrap_text=True)
         for row in ws.iter_rows(min_row=2):  # Skip header row
-            book_cell = row[0]  # Column A
+            book_cell = row[7]  # Column A
             if book_cell.value:
                 book_cell.alignment = wrap_alignment
         fp = io.BytesIO()

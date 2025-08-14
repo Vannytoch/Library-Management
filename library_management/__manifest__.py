@@ -29,7 +29,7 @@ Long description of module's purpose
         'views/portal_template_view.xml',
         'views/portal_book.xml',
         'views/library_dashboard.xml',
-
+        'views/book_genre_views.xml',
         'views/book_views.xml',
         'views/author_views.xml',
         'views/member_views.xml',

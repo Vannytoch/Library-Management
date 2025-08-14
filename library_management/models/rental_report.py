@@ -1,7 +1,5 @@
 from odoo import models, fields, api
 
-
-
 class RentalReport(models.AbstractModel):
     _name = 'report.library_management.report_rental_template'
     _description = 'Rental Report Template'

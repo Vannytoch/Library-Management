@@ -57,7 +57,7 @@
                                 <t t-esc="rental.member_id.name"/>
                             </td>
                             <td>
-                                <t t-esc="', '.join(rental.book_ids.mapped('title'))"/>
+                                <t t-esc="', '.join(rental.rental_line_ids.mapped('book_id.title'))"/>
                             </td>
                             <td>
                                 <t t-esc="rental.rental_date"/>
@@ -69,7 +69,7 @@
                                 <t t-esc="rental.return_date or '-'"/>
                             </td>
                             <td>
-                                <t t-esc="rental.rental_fee"/>
+                                <t t-esc="rental.total_amount"/>
                                 <t t-esc="rental.currency_id.symbol"/>
                             </td>
                             <td>
@@ -146,7 +146,7 @@
                                             <div>
                                                 <div class="text-muted small">Total Rental Fee</div>
                                                 <div class="h4 text-primary mb-0">
-                                                    <t t-esc="rental.rental_fee"/>
+                                                    <t t-esc="rental.total_amount"/>
                                                     <t t-esc="rental.currency_id.symbol"/>
                                                 </div>
                                             </div>
@@ -159,11 +159,11 @@
                                             <i class="fa fa-books me-2"></i>Rented Books
                                         </h3>
                                         <div class="list-group">
-                                            <t t-foreach="rental.book_ids" t-as="book">
+                                            <t t-foreach="rental.rental_line_ids" t-as="line">
                                                 <div class="list-group-item d-flex justify-content-between align-items-center">
                                                     <div>
-                                                        <div class="fw-bold"><t t-esc="book.title"/></div>
-                                                        <small class="text-muted">ISBN: <t t-esc="book.isbn or 'N/A'"/></small>
+                                                        <div class="fw-bold"><t t-esc="line.book_id.title"/></div>
+                                                        <small class="text-muted">ISBN: <t t-esc="line.book_id.isbn or 'N/A'"/></small>
                                                     </div>
                                                     <span class="badge bg-light text-dark">
                                                         <i class="fa fa-book"></i>
