@@ -33,6 +33,10 @@
                     <footer>
                         <button string="Generate PDF" type="object" name="action_generate_report" class="btn-primary"/>
                         <button string="Import Data" type="object" name="action_import_data" class="btn-success"/>
+                          <button name="generate_and_send_report"
+                        type="object"
+                        string="Send Monthly Report"
+                        class="btn-primary"/>
                         <button string="Export Data" type="object" name="action_export_data" class="btn-warning"/>
                         <button string="Cancel" class="btn-secondary ms-auto" special="cancel"/>
                     </footer>

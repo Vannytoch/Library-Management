@@ -20,22 +20,50 @@
                         <group>
                             <field name="name" readonly="1"/>
                             <field name="member_id" readonly="state != 'draft'"/>
-                            <field name="book_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('id', 'in', available_book_ids)]"/>
-                            <field name="rental_fee" readonly="1" widget="monetary"/>
                         </group>
                         <group>
                             <field name="rental_date" readonly="state != 'draft'"/>
                             <field name="due_date" readonly="state != 'draft'"/>
                             <field name="return_date" readonly="1"/>
                             <field name="currency_id" invisible="1"/>
-
                         </group>
                     </group>
+                    <notebook>
+                            <page string="Rental Lines" name="rental_lines">
+                                <field name="rental_line_ids" widget="sol_o2m" mode="list">
+                                    <form>
+                                        <group>
+                                            <field name="book_id"/>
+                                            <field name="rental_id"/>
+                                            <field name="qty"/>
+                                            <field name="unit_price" widget="monetary"/>
+                                            <field name="discount"/>
+                                            <field name="subtotal" widget="monetary"/>
+                                        </group>
+                                    </form>
+                                    <list editable="bottom">
+                                        <control>
+                                            <create name="add_book_control" string="Add a book"/>
+                                        </control>
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="book_id" domain="[('stock', '>', 0),('id', 'not in', excluded_book_ids)]"/>
+                                        <field name="qty"/>
+                                        <field name="unit_price"/>
+                                        <field name="discount"/>
+                                        <field name="subtotal"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    <group col="6" class="mt-2 mt-md-0">
+                        <h3>
+                            <group class="oe_subtotal_footer text-end" colspan="6">
+                                <field name="total_amount" readonly="1"  widget="monetary"/>
+                            </group>
+                        </h3>
+                    </group>
                 </sheet>
-                <div class="oe_chatter">
-                        <field name="message_ids" widget="mail_thread"/>
-                    </div>
-
+                <chatter/>
             </form>
         </field>
     </record>
@@ -47,18 +75,13 @@
             <list string="Rentals" >
                 <header>
                     <button name="action_create_report" type="object" string="Report" display="always"/>
-                    <button name="generate_and_send_report"
-        type="object"
-        string="Send Monthly Report"
-        class="btn-primary"/>
+
                 </header>
                 <field name="name"/>
                 <field name="member_id"/>
-                <field name="book_ids"/>
                 <field name="rental_date"/>
                 <field name="due_date"/>
                 <field name="return_date" readonly="1"/>
-                <field name="rental_fee" widget="monetary" width="350" sum="Total fee"/>
                 <field name="state"
                        decoration-primary="state == 'confirmed'"
                        decoration-success="state == 'active'"
@@ -66,32 +89,11 @@
                        decoration-danger="state == 'overdue'" width="100" widget="badge"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="create_date" optional="hide"/>
+                <field name="total_amount" readonly="1"  widget="monetary" sum="total_amount"/>
+
             </list>
         </field>
     </record>
-
-    <record id="view_library_rental_kanban" model="ir.ui.view">
-        <field name="name">library.rental.kanban</field>
-        <field name="model">library.rental</field>
-        <field name="arch" type="xml">
-            <kanban default_group_by="state">
-                <field name="state"/>
-                <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click">
-                            <strong><field name="name"/></strong><br/>
-                            Book: <field name="book_ids"/><br/>
-                            <span>Member: <field name="member_id"/></span><br/>
-                            <span>Rental: <field name="rental_date"/></span><br/>
-                            <span>Due: <field name="due_date"/></span><br/>
-                            <span>Status: <field name="state"/></span>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
-
     <record id="action_library_rental" model="ir.actions.act_window">
         <field name="name">Rentals</field>
         <field name="res_model">library.rental</field>

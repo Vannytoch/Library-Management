@@ -14,10 +14,13 @@ class LibraryDashboardPortal(CustomerPortal):
         status_book={}
         for book in books_field_status:
             status_book[book[1]] = books.search_count([('status', '=', book[0])])
-        type_book={}
-        books_field_type = books._fields['genre'].selection
-        for type in books_field_type:
-            type_book[type[1]] = books.search_count([('genre', '=', type[0])])
+
+        type_book = {}
+        # Loop through all genres
+        for genre in request.env['library.book.genre'].sudo().search([]):
+            # Count books that have this genre in their many2many
+            count = books.search_count([('book_genre', 'in', [genre.id])])  # use genre.id
+            type_book[genre.name] = count
 
         rental_per_mount = {}
         today = datetime.today()
@@ -33,7 +36,6 @@ class LibraryDashboardPortal(CustomerPortal):
         rental_state_count ={}
         for state in rental_field_state:
             rental_state_count[state[1]] = rentals.search_count([('state', '=', state[0])])
-
         data = {
             'book_status_count': status_book,
             'book_genre_count': type_book,
@@ -41,5 +43,4 @@ class LibraryDashboardPortal(CustomerPortal):
             'rental_state_count': rental_state_count,
             'page_name':'library_dashboard'
         }
-
         return request.render('library_management.library_dashboard_template', data)

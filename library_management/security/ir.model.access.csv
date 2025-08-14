@@ -1,8 +1,10 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_library_book,access.library.book.user,model_library_book,base.group_user,1,1,1,1
+access_library_book_genre,access.library.book.genre.user,model_library_book_genre,base.group_user,1,1,1,1
 access_library_author,access.library.author.user,model_library_author,base.group_user,1,1,1,1
 access_library_member,access.library.member.user,model_library_member,base.group_user,1,1,1,1
 access_library_rental,access.library.rental.user,model_library_rental,base.group_user,1,1,1,1
 access_library_rental_report_wizard,Library Rental Report Wizard,model_library_rental_report_wizard,,1,1,1,1
+access_library_rental_line_user,access_library_rental_line_user,model_library_rental_line,base.group_user,1,1,1,1
 
 

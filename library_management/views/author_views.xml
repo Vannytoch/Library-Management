@@ -38,6 +38,6 @@
 
         </record>
 
-        <menuitem id="library_author_menu" name="Author" parent="library_book_root_menu" action="library_author_action"/>
+        <menuitem id="library_author_menu" name="Author" parent="library_book_sub_menu" action="library_author_action" />
     </data>
 </odoo>

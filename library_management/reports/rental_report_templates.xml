@@ -1,98 +1,190 @@
 <odoo>
   <template id="report_rental_template_form">
-    <div class="page">
-      <div style="height: 100px">
+      <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; min-height: 100vh; padding: 2rem;">
 
-      </div>
-        <h1 class="text-center">Rental Report</h1>
-        <div class="container">
-          <div class="row bg-light fw-bold py-2" style="border-bottom: 2px solid orange;">
-            <div class="col col-2 py-2">Member</div>
-            <div class="col col-5 py-2">Book</div>
-            <div class="col col-2 py-2 text-center">Rental Date</div>
-            <div class="col col-2 py-2 text-center">Return Date</div>
-            <div class="col col-1 py-2 text-center">Status</div>
+          <!-- Header -->
+          <div class="report-header" style="max-width: 1000px; margin: 0 auto 2rem; background: #2c3e50; padding: 1.5rem; border-radius: 8px; color: white;">
+              <h1 style="margin: 0; font-weight: 600; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                  <i class="bi bi-book"></i> Library Rental Report
+              </h1>
+              <p style="margin: 0.5rem 0 0; text-align: center; opacity: 0.9;">
+                  <i class="bi bi-calendar"></i>
+                  <span t-esc="datetime.datetime.now().strftime('%B %d, %Y')"/>
+              </p>
+          </div>
+          <t t-foreach="docs" t-as="rental">
+            <!-- Summary Cards -->
+              <div style="max-width: 1000px; margin: 0 auto 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                  <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #3498db;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem; color: #7f8c8d; margin-bottom: 0.5rem;">
+                          <i class="bi bi-person"></i> Member
+                      </div>
+                      <div style="font-size: 1.5rem; font-weight: 700; color: #2c3e50;">
+                          <t t-esc="rental.member_id.name"/>
+                      </div>
+                  </div>
+
+                  <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #2ecc71;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem; color: #7f8c8d; margin-bottom: 0.5rem;">
+                          <i class="bi bi-book"></i> Books
+                      </div>
+                      <div style="font-size: 1rem; font-weight: 700; color: #2c3e50;">
+                          <t t-esc="', '.join(rental.rental_line_ids.mapped('book_id.title'))"/>
+                      </div>
+                  </div>
+
+                  <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #f39c12;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem; color: #7f8c8d; margin-bottom: 0.5rem;">
+                          <i class="bi bi-calendar-event"></i> Rental Date
+                      </div>
+                      <div style="font-size: 1.5rem; font-weight: 700; color: #2c3e50;">
+                          <t t-esc="rental.rental_date"/>   ->   <t t-esc="rental.due_date"/>
+                      </div>
+                  </div>
+
+                  <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid purple;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem; color: #7f8c8d; margin-bottom: 0.5rem;">
+                        <i class="bi bi-calendar-check"></i> Return Date
+                      </div>
+                      <div style="font-size: 1.5rem; font-weight: 700; color: #2c3e50;">
+                          <t t-if="rental.return_date">
+                              <t t-esc="rental.return_date"/>
+                          </t>
+                          <t t-else="">
+                              <span style="color: #95a5a6;">Not returned</span>
+                          </t>
+                      </div>
+                  </div>
+                  <div style="background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #e74c3c;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem; color: #7f8c8d; margin-bottom: 0.5rem;">
+                         <i class="bi bi-cash"></i> Rental Fee
+                      </div>
+                      <div style="font-size: 1.5rem; font-weight: 700; color: #2c3e50;">
+                          <t t-esc="rental.total_amount" t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/>
+                      </div>
+                  </div>
+              </div>
+          </t>
+
+          <!-- Footer -->
+          <div style="max-width: 1000px; margin: 2rem auto 0; padding: 1.5rem; text-align: center; font-size: 0.875rem; color: #7f8c8d; border-top: 1px solid #ecf0f1;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <i class="bi bi-info-circle"></i>
+              Generated by Library System on
+              <span t-esc="datetime.datetime.now().strftime('%B %d, %Y at %H:%M')"/>
+            </div>
           </div>
 
-          <!-- Data Rows -->
-          <t t-foreach="docs" t-as="rental">
-            <t t-set="state_class" t-value="{
-    'returned': 'badge bg-success text-light',
-    'late': 'badge bg-danger text-light',
-    'ongoing': 'badge bg-warning text-dark'
-}.get(rental.state, 'badge bg-secondary')"/>
-            <div class="row py-2" style="border-bottom: 1px solid orange;">
-              <div class="col col-2 py-2"><t t-esc="rental.member_id.name"/></div>
-              <div class="col col-5 py-2"><t t-esc="', '.join(rental.book_ids.mapped('title'))"/></div>
-              <div class="col col-2 py-2 text-center"><t t-esc="rental.rental_date"/></div>
-              <div class="col col-2 py-2 text-center"><t t-esc="rental.return_date"/></div>
-              <div class="col col-1 py-2 text-center">
-                <span t-attf-class="p-1 rounded-pill {{ state_class }}" style="border-radius:10px;">
-                  <t t-esc="rental.state.capitalize()"/>
-                </span>
-              </div>
-            </div>
-          </t>
-        </div>
-
+          <!-- Bootstrap Icons -->
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"/>
+          <style>
+            .text-success { color: #2ecc71 !important; }
+            .text-danger { color: #e74c3c !important; }
+            .text-warning { color: #f39c12 !important; }
+            .text-secondary { color: #95a5a6 !important; }
+          </style>
       </div>
   </template>
+
+
+
   <template id="report_rental_template_list">
-     <div class="page">
-       <div style="height: 100px">
+      <t t-call="web.html_container">
 
-      </div>
-        <h1 class="text-center text-primary">Rental Report</h1>
-        <t t-set="start_date" t-value="data['start_date'] if data else ''"/>
-        <t t-set="end_date" t-value="data['end_date'] if data else ''"/>
-        <p>From: <t t-esc="start_date"/> </p>
-        <p>To: <t t-esc="end_date"/></p>
-        <div class="container">
-  <!-- Header Row -->
-          <div class="row bg-light fw-bold py-2" style="border-bottom: 2px solid orange;">
-            <div class="col col-2 py-2">Member</div>
-            <div class="col col-4 py-2">Book</div>
-            <div class="col col-2 py-2 text-center">Rental Date</div>
-            <div class="col col-2 py-2 text-center">Return Date</div>
-            <div class="col col-1 py-2 text-center">Status</div>
-            <div class="col col-1 py-2 text-center">Rental fee</div>
-          </div>
-
-          <!-- Data Rows -->
-          <t t-foreach="docs" t-as="rental">
-            <t t-set="state_class" t-value="{
-    'returned': 'badge bg-success text-light',
-    'late': 'badge bg-danger text-light',
-    'ongoing': 'badge bg-warning text-dark'
-}.get(rental.state, 'badge bg-secondary')"/>
-            <div class="row py-2" style="border-bottom: 1px solid orange;">
-              <div class="col col-2 py-2"><t t-esc="rental.member_id.name"/></div>
-              <div class="col col-4 py-2"><t t-esc="', '.join(rental.book_ids.mapped('title'))"/></div>
-              <div class="col col-2 py-2 text-center"><t t-esc="rental.rental_date"/></div>
-              <div class="col col-2 py-2 text-center"><t t-esc="rental.return_date"/></div>
-              <div class="col col-1 py-2 text-center">
-                <span t-attf-class="p-1 rounded-pill {{ state_class }}" style="border-radius:10px;">
-                  <t t-esc="rental.state.capitalize()"/>
-                </span>
+          <div class="page">
+              <!-- Report Header -->
+              <div class="row mb-4">
+                  <div class="col-12 text-center">
+                      <h1 class="text-primary"><strong>Rental Report</strong></h1>
+                      <div class="d-flex justify-content-center gap-4">
+                          <p class="mb-0"><strong>From:</strong> <span t-esc="data['start_date'] if data else ''" class="text-muted"/></p>
+                          <p class="mb-0"><strong>To:</strong> <span t-esc="data['end_date'] if data else ''" class="text-muted"/></p>
+                      </div>
+                  </div>
               </div>
-              <div class="col col-1 py-2 text-center">
-                <t t-esc="rental.rental_fee" t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/>
-              </div>
-            </div>
-          </t>
-          <t t-set="sum_total_fee" t-value="sum(docs.mapped('rental_fee'))"/>
 
-          <!-- Display the total -->
-          <div class="row mt-3">
-            <div class="col col-10 py-2 pe-2 text-end">
-              Total fee:
-            </div>
-            <div class="col col-2 text-end">
-              <h5><t t-esc="sum_total_fee" t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/></h5>
-            </div>
+              <!-- Table Header -->
+              <div class="row bg-primary py-2 g-0" style="border-radius: 5px 5px 0 0;">
+                  <div class="col-2 ps-3 text-light">Member</div>
+                  <div class="col-4 text-light">Book</div>
+                  <div class="col-2 text-center text-light">Rental Date</div>
+                  <div class="col-2 text-center text-light">Return Date</div>
+                  <div class="col-1 text-center text-light">Status</div>
+                  <div class="col-1 text-end pe-3 text-light">Fee</div>
+              </div>
+
+              <!-- Data Rows -->
+              <t t-foreach="docs" t-as="rental">
+                  <t t-set="state_class" t-value="{
+                      'returned': 'bg-primary text-light',
+                      'active': 'bg-success text-light',
+                      'overdue': 'bg-danger text-light',
+                      'draft': 'bg-warning'
+                  }.get(rental.state, 'bg-secondary')"/>
+
+                  <div class="row py-2 g-0 align-items-center" style="border-bottom: 1px solid #eee;">
+                      <div class="col-2 ps-3"><t t-esc="rental.member_id.name"/></div>
+                      <div class="col-4">
+                          <t t-foreach="enumerate(rental.rental_line_ids.mapped('book_id.title'))" t-as="item">
+                                <t t-set="i" t-value="item[0]"/>
+                                <t t-set="title" t-value="item[1]"/>
+                                <span t-attf-class="mb-1 text-{{ 'primary' if i % 2 == 1 else 'dark' }}">
+                                    <t t-esc="title"/>,
+                                </span>
+                            </t>
+                      </div>
+                      <div class="col-2 text-center"><span t-esc="rental.rental_date" class="text-muted"/></div>
+                      <div class="col-2 text-center"><span t-esc="rental.return_date" class="text-muted"/></div>
+                      <div class="col-1 text-center">
+                          <span t-attf-class="badge {{ state_class }} o_report_status" style="border-radius: 10px;">
+                              <t t-esc="rental.state.capitalize()"/>
+                          </span>
+                      </div>
+                      <div class="col-1 text-end pe-3">
+                          <t t-esc="rental.total_amount" t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/>
+                      </div>
+                  </div>
+              </t>
+
+              <!-- Total Section -->
+              <div class="row mt-4">
+                  <div class="col-12">
+                      <div class="o_report_total bg-200 p-3 rounded">
+                          <div class="row justify-content-end">
+                              <div class="col-auto">
+                                  <h4 class="mb-0">
+                                      <strong>Total Rental Fees:</strong>
+                                      <span class="text-primary ms-2">
+                                          <t t-esc="sum(rental.total_amount for rental in docs)"
+                                             t-options='{"widget": "monetary", "display_currency": docs[0].currency_id}'/>
+                                      </span>
+                                  </h4>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
           </div>
-        </div>
-      </div>
+          <style>
+          .o_report_status {
+              font-size: 11px;
+              padding: 4px 8px;
+              min-width: 70px;
+              display: inline-block;
+          }
+
+          .o_report_total {
+              background-color: #f8f9fa;
+              border: 1px solid #dee2e6;
+          }
+
+          .bg-200 {
+              background-color: rgba(0, 0, 0, 0.02);
+          }
+
+
+          </style>
+      </t>
   </template>
   <template id="report_rental_template">
     <t t-call="web.basic_layout">

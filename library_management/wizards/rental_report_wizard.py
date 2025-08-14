@@ -1,7 +1,10 @@
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 from werkzeug.urls import url_encode
-import base64
+from datetime import  datetime
+from dateutil.relativedelta import relativedelta
+import base64,openpyxl,io
+from openpyxl.styles import Alignment
 
 
 class RentalReportWizard(models.TransientModel):
@@ -99,37 +102,67 @@ class RentalReportWizard(models.TransientModel):
                 # Handle Excel .xlsx
                 workbook = openpyxl.load_workbook(filename=BytesIO(file_content))
                 sheet = workbook.active
+
+                last_rental = False  # store the last created rental
                 for row in sheet.iter_rows(min_row=2, values_only=True):  # skip header
+                    # Check if row[0] to row[5] are all empty
+                    if all(cell in (None, '') for cell in row[0:6]):
+                        # Blank row → add books to last rental only
+                        if not last_rental:
+                            continue  # skip if no rental exists yet
+                        book_titles_raw = row[6]  # or some column that contains books
+                        # Convert titles to rental lines
+                        rental_lines = []
+                        if book_titles_raw:
+                            book_titles = [title.strip() for title in str(book_titles_raw).split(',')]
+                            for title in book_titles:
+                                book = self.env['library.book'].search([('title', '=', title)], limit=1)
+                                if book:
+                                    rental_lines.append((0, 0, {'book_id': book.id}))
+                                else:
+                                    raise UserError(f"Book with title '{title}' not found.")
+
+                        # Add lines to the last rental
+                        if rental_lines:
+                            last_rental.write({'rental_line_ids': rental_lines})
+                        continue  # skip creating a new rental
+
                     book_titles_raw = row[0]
-                    due_date = row[1]
-                    member = row[2]
-                    rental_date = row[3]
-                    rental_fee = row[4]
-                    return_date = row[5]
-                    status = row[6]
+
+                    due_date = row[0]
+                    member = row[1]
+                    rental_date = row[2]
+                    rental_fee = row[3]
+                    return_date = row[4]
+                    status = row[5]
+                    title = row[6]
+                    qty = row[7]
+                    discount = row[8]
                     member_id =0
+
                     if member:
                         member_id = self.env['library.member'].search([('name', '=', member)], limit=1)
                     # Convert titles to book IDs
-                    book_ids_list = []
-                    if book_titles_raw:
-                        book_titles = [title.strip() for title in str(book_titles_raw).split(',')]
-                        for title in book_titles:
-                            book = self.env['library.book'].search([('title', '=', title)], limit=1)
-                            if book:
-                                book_ids_list.append(book.id)
-                            else:
-                                raise UserError(f"Book with title '{title}' not found.")
+                    rental_line = []
+                    book = self.env['library.book'].search([('title', '=', title)], limit=1)
+                    if book:
+                        rental_line.append((0, 0,
+                                            {'book_id': book.id,
+                                             'discount': float(discount or 0),
+                                             'qty': int(qty or 0)}
+                                            ))
+                    else:
+                        raise UserError(f"Book with title '{title}' not found.")
 
                     # Create rental record
-                    self.env['library.rental'].create({
+                    last_rental = self.env['library.rental'].create({
                         'member_id': member_id.id,
-                        'book_ids': [(6, 0, book_ids_list)],
+                        'rental_line_ids': rental_line,
                         'rental_date': rental_date,
                         'due_date': due_date,
                         'return_date': return_date,
-                        'rental_fee': rental_fee,
-                        'state': status.lower(),
+                        'total_amount': rental_fee,
+                        'state': status if status in ['draft', 'returned'] else 'draft',
                     })
 
             else:
@@ -171,3 +204,58 @@ class RentalReportWizard(models.TransientModel):
             }
         }
         return self.env.ref('library_management.action_rental_report_pdf').report_action(self, data=data)
+
+    def generate_and_send_report(self):
+        # Fetch records
+        start_date = datetime.now() - relativedelta(months=1)
+        end_date = datetime.now()
+        domain = [
+            ('rental_date', '>=', start_date),
+            ('rental_date', '<=', end_date)
+        ]
+        rentals = self.env['library.rental'].sudo().search(domain)
+
+        # Create XLSX
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Rental Report'
+        ws.append(['Book', 'Due Date', 'Member', 'Rental Date', 'Rental Fee', 'Return Date', 'Status'])
+
+        ws.column_dimensions['A'].width = 30  # Book Title
+        ws.column_dimensions['B'].width = 30  # Date
+        ws.column_dimensions['C'].width = 30  # Customer
+        ws.column_dimensions['D'].width = 30  # Start
+        ws.column_dimensions['E'].width = 30  # Fee
+        ws.column_dimensions['F'].width = 30  # Return
+        ws.column_dimensions['G'].width = 30  # State
+        for r in rentals:
+            book_title = ', '.join(r.rental_line_ids.mapped('book_id.title'))
+            ws.append([book_title, r.due_date, r.member_id.name, r.rental_date, r.total_amount, r.return_date, r.state])
+
+        for row in ws.iter_rows(min_row=2):
+            row[0].alignment = Alignment(wrap_text=True)
+
+        fp = io.BytesIO()
+        wb.save(fp)
+        fp.seek(0)
+        xlsx_data = fp.read()
+
+        # Send Email
+        attachment = self.env['ir.attachment'].create({
+            'name': f"rental_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
+            'type': 'binary',
+            'datas': base64.b64encode(xlsx_data),
+            'res_model': 'library.rental',
+            'res_id': self.id,
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        # Replace with your real recipient email
+        recipient_email = 'admin@example.com'
+        mail_values = {
+            'subject': 'Monthly Rental Report',
+            'body_html': '<p>Please find attached the monthly rental report.</p>',
+            'email_to': recipient_email,
+            'attachment_ids': [(6, 0, [attachment.id])],
+        }
+        self.env['mail.mail'].sudo().create(mail_values).send()

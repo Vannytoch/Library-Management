@@ -33,7 +33,7 @@
                     <field name="title" decoration-danger="1"/>
                     <field name="author_id" decoration-success="1"/>
                     <field name="isbn" decoration-warning="1"/>
-                    <field name="genre"/>
+                    <field name="book_genre"/>
                     <field name="publication_date"/>
                     <field name="book_age"/>
                 </list>
@@ -50,7 +50,7 @@
                             <group class="col-6">
                                 <field name="title"/>
                                 <field name="author_id"/>
-                                <field name="genre"/>
+                                <field name="book_genre"/>
                                 <field name="isbn" placeholder="XXX-X-XX-XXXXXX-X"/>
                             </group>
                             <group class="-col-6">
@@ -67,7 +67,7 @@
                                 <page string="Status">
                                     <group>
                                         <field name="status" />
-                                        <field name="member_id" readonly="1"/>
+                                        <field name="stock" />
                                     </group>
                                 </page>
                             </notebook>
@@ -76,12 +76,10 @@
                                     <field name="rental_fee" widget="monetary"/>
                                     <field name="currency_id" invisible="1"/>
                                 </group>
-                                <group class="text-end text-danger fw-bolder">
-                                    <field name="total_rental" readonly="1" widget="monetary"/>
-                                </group>
 
                             </group>
                         </group>
+
                     </sheet>
                     <chatter/>
                 </form>
@@ -95,7 +93,7 @@
                 <kanban class="o_kanban_model" default_group_by="status">
                     <progressbar field="status"
 
-                       colors='{"available":"success", "borrowed":"warning", "lost":"danger"}'
+                       colors='{"in_stock":"success", "out_stock":"danger"}'
           />
                     <templates>
                         <t t-name="card">
@@ -118,9 +116,8 @@
                             <div class="row">
                                 <div class="col-6">
                                       <field name="status" widget="badge"
-                                             decoration-success="status == 'available'"
-                                             decoration-warning="status == 'borrowed'"
-                                             decoration-danger="status == 'lost'"/>
+                                             decoration-success="status == 'in_stock'"
+                                             decoration-danger="status == 'out_stock'"/>
                                 </div>
                                 <div class="col-6 text-end">
                                     <field name="isbn"/>
@@ -145,6 +142,7 @@
                   parent="library_book_root_menu"
                   action="library_book_action"
                   sequence="2"/>
+        <menuitem id="library_book_menu" name="Books" parent="library_book_sub_menu" action="library_book_action" sequence="1"/>
 
     </data>
 </odoo>
